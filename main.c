@@ -30,6 +30,16 @@ double radianos(double angulo) {
 	return angulo*M_PI/180;
 }
 
+
+double limitarDouble(double n, double limite) {
+	if (n >= limite) {
+		return n-limite;	
+	} else if (n < 0) {
+		return n+limite;
+	}
+	return n;
+}
+
 double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
 	double a = p1.x-p2.x, b = p1.y-p2.y;
 	return sqrt(a*a+b*b);
@@ -189,7 +199,7 @@ int main(int argc, char* args[]) {
 			}
 			
 			//atualiza o angulo do chassi
-			angulo = fmod(angulo,360);
+			angulo = limitarDouble(angulo,360);
 			
 			//atualiza o frame
 			if (espera == 0) {
@@ -200,10 +210,10 @@ int main(int argc, char* args[]) {
 				
 				//grade chao
 				int m;
-				for (m = fmod(local.x*zoom,100*zoom); m < WIDTH+100; m+=100*zoom) {
+				for (m = limitarDouble(local.x*zoom,100*zoom); m < WIDTH+100; m+=100*zoom) {
 					lineRGBA(ren, WIDTH-m,-100,WIDTH-m,HEIGHT+100,0,50,0,255);
 				}
-				for (m = fmod(local.y*zoom,100*zoom); m < HEIGHT+100; m+=100*zoom) {
+				for (m = limitarDouble(local.y*zoom,100*zoom); m < HEIGHT+100; m+=100*zoom) {
 					lineRGBA(ren, -100,HEIGHT-m,WIDTH+100,HEIGHT-m,0,50,0,255);
 				}
 				
@@ -211,8 +221,7 @@ int main(int argc, char* args[]) {
 				SDL_FPoint centro_torre_relativo = rotacionar(zero,escalonar(torre_offset,zoom),angulo);
 				SDL_FPoint centro_torre_absoluto = somar(centro_torre_relativo,centro_tanque);
 				SDL_FPoint base = somar(escalonar((SDL_FPoint){-37,-34},zoom),centro_torre_absoluto);
-			
-	SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
+				SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
 				
 				//encontra o angulo da mira
 				SDL_FPoint mouse = {mx,my};	
@@ -337,7 +346,7 @@ int main(int argc, char* args[]) {
 					angulo_arma += VELOCIDADE_ANGULAR;			
 				}
 				//atualiza o angulo da arma
-				angulo_arma = fmod(angulo_arma,360);
+				angulo_arma = limitarDouble(angulo_arma,360);
 					
 				if (angulo_arma == angulo_alvo)
 					;
