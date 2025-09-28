@@ -114,9 +114,10 @@ int main(int argc, char* args[]) {
 			ACELERACAO_REV = 7,
 			DESACELERACAO = 5;
 		double velocidade = 0,
-			VELOCIDADE_ANGULAR = 0.9,
-			VELOCIDADE_TORRE = 0.5,
-			zoom = 0.9;	
+			   VELOCIDADE_ANGULAR = 0.9,
+			   VELOCIDADE_TORRE = 0.5,
+			   zoom = 0.9,
+			   mx=0,my=0;	
 			
 		SDL_FPoint torre_offset = {19,0},
 						zero = {0,0},
@@ -138,7 +139,8 @@ int main(int argc, char* args[]) {
 		sprintf(state, "Estado: PONTO_MORTO");
 		
 		enum Movimento estado = PONTO_MORTO;
-		int gamerunning = 1, mx=0, my=0;
+		int gamerunning = 1, 
+		    intmx=0,intmy=0;
 		Uint32 espera = TPF;
 		SDL_Event evt;
 		while (gamerunning) {
@@ -194,7 +196,8 @@ int main(int argc, char* args[]) {
 				} else if (evt.type == SDL_QUIT) {
 					gamerunning = 0;
 				} else if (evt.type == SDL_MOUSEMOTION) {
-					SDL_GetMouseState(&mx,&my);
+					SDL_GetMouseState(&intmx,&intmy);
+					mx = intmx, my = intmy;
 				}
 			}
 			
@@ -355,8 +358,9 @@ int main(int argc, char* args[]) {
 					else
 						angulo_arma -= VELOCIDADE_TORRE;
 				}
-				//atualiza a posição do tanque
-				local = somar(local, mover(velocidade/FPS, angulo));
+				//atualiza a posição do tanque e do ponteiro
+				SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
+				local = somar(local, deslocamento);
 				
 				//atualiza a velocidade do tanque
 				if (velocidade > 0)
