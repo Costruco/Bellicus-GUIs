@@ -82,7 +82,8 @@ int main(int argc, char* args[]) {
 				    * torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
 					* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
 					* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
-					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png");
+					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
+                    * soldado1 = IMG_LoadTexture(ren, "./sprites/soldado.png");
 		
 		//angulos e posições das lagartas
 		double angulo = 0, 
@@ -210,7 +211,8 @@ int main(int argc, char* args[]) {
 				SDL_FPoint centro_torre_relativo = rotacionar(zero,escalonar(torre_offset,zoom),angulo);
 				SDL_FPoint centro_torre_absoluto = somar(centro_torre_relativo,centro_tanque);
 				SDL_FPoint base = somar(escalonar((SDL_FPoint){-37,-34},zoom),centro_torre_absoluto);
-				SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
+			
+	SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
 				
 				//encontra o angulo da mira
 				SDL_FPoint mouse = {mx,my};	
@@ -250,7 +252,19 @@ int main(int argc, char* args[]) {
 				
 				SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
 				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
-			
+			    //Soldado teste arrumar o angulo
+                double angulosd1;
+                if (200-local.x+WIDTH/2!=0){
+                    angulosd1=graus(atan(((double)200-local.y+HEIGHT/2-centro_torre.y)/((double)200-local.x+WIDTH/2-centro_torre.x)));
+                    if(200-local.x+WIDTH/2<=centro_torre.x){
+                        angulosd1+=180;
+                    }
+    
+                }
+                angulosd1 = (angulosd1 <0)?angulosd1+360:angulosd1;
+
+                SDL_FRect sd1 = {200.0-local.x+WIDTH/2,200-local.y+HEIGHT/2,32,32};
+                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1+135,NULL,SDL_FLIP_NONE);
 				//painel de controle do chassi
 				sprintf(x, "x: %4.1lf", local.x);
 				sprintf(y, "y: %4.1lf", -local.y);
