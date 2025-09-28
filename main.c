@@ -122,7 +122,10 @@ int main(int argc, char* args[]) {
 		SDL_FPoint torre_offset = {19,0},
 						zero = {0,0},
 				  		centro_tanque = {WIDTH/2,HEIGHT/2},
+						centro_soldado1 = {216,216},
+						centro_soldado2 = {316,316},
 				  		local = {0,0};
+		double folga_de_fuga1 = 0,folga_de_fuga2 = 0;
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
 		//informações dos paineis
@@ -234,6 +237,42 @@ int main(int argc, char* args[]) {
 				double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
 				SDL_FPoint mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
 				
+				
+				//Soldado teste arrumar o angulo
+                double angulosd1 = anguloEntrePontos((SDL_FPoint){(centro_soldado1.x-local.x)*zoom+WIDTH/2,(centro_soldado1.y-local.y)*zoom+HEIGHT/2},centro_tanque);
+                double angulosd2 = anguloEntrePontos((SDL_FPoint){(centro_soldado2.x-local.x)*zoom+WIDTH/2,(centro_soldado2.y-local.y)*zoom+HEIGHT/2},centro_tanque);
+                SDL_FRect sd1 = {(centro_soldado1.x-16-local.x)*zoom+WIDTH/2,(centro_soldado1.y-16-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
+                SDL_FRect sd2 = {(centro_soldado2.x-16-local.x)*zoom+WIDTH/2,(centro_soldado2.y-16-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
+                
+                angulosd1 += (folga_de_fuga1>0)?180:0;
+                angulosd2 += (folga_de_fuga2>0)?180:0;
+                if (distanciaEntrePontos(centro_soldado1,local) < 200+folga_de_fuga1) {
+	        		centro_soldado1 = somar(centro_soldado1,mover(-5,angulosd1));
+	        		folga_de_fuga1 = 100;
+	        	} else if (distanciaEntrePontos(centro_soldado1,local) > 300) {
+	                centro_soldado1 = somar(centro_soldado1,mover(-3,angulosd1));
+                }
+	        	folga_de_fuga1 = MAX(folga_de_fuga1-5,0);
+                if (distanciaEntrePontos(centro_soldado2,local) < 200+folga_de_fuga2) {
+	        		centro_soldado2 = somar(centro_soldado2,mover(-5,angulosd2));	
+	        		folga_de_fuga2 = 100;
+	        	} else if (distanciaEntrePontos(centro_soldado2,local) > 300) {
+	                centro_soldado2 = somar(centro_soldado2,mover(-3,angulosd2));
+	        	}
+	        	folga_de_fuga2 = MAX(folga_de_fuga2-5,0);
+            	if (distanciaEntrePontos(centro_soldado1,centro_soldado2) <= 20) {
+            		if (angulosd2 > angulosd1) {
+            			centro_soldado2 = somar(centro_soldado2,mover(-2,angulosd2-90));
+	                	centro_soldado1 = somar(centro_soldado1,mover(-2,angulosd1+90));
+	            	} else {
+	            		centro_soldado2 = somar(centro_soldado2,mover(-2,angulosd2+90));
+	                	centro_soldado1 = somar(centro_soldado1,mover(-2,angulosd1-90));
+					}
+	        	}
+	        	SDL_RenderCopyExF(ren,soldado1,NULL,&sd2,angulosd2,NULL,SDL_FLIP_NONE);
+                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1,NULL,SDL_FLIP_NONE);
+                
+                
 				//chassi do tanque
 				SDL_Texture * chassi;
 				if (zoom >= 0.2)
@@ -264,13 +303,6 @@ int main(int argc, char* args[]) {
 				
 				SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
 				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
-				
-			    //Soldado teste arrumar o angulo
-			    
-                double angulosd1 = anguloEntrePontos((SDL_FPoint){(200+16-local.x)*zoom+WIDTH/2,(200+16-local.y)*zoom+HEIGHT/2},centro_tanque);
-                angulosd1 = limitarDouble(angulosd1,360);
-                SDL_FRect sd1 = {(200.0-local.x)*zoom+WIDTH/2,(200.0-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
-                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1,NULL,SDL_FLIP_NONE);
                 
 				//painel de controle do chassi
 				sprintf(x, "x: %4.1lf", local.x);
