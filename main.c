@@ -52,7 +52,7 @@ double anguloEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
 		if (p1.x < p2.x)
 			angulo += 180;
 	}
-	return fmod(angulo,360);
+	return limitarDouble(angulo,360);
 }
 
 SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
@@ -261,19 +261,14 @@ int main(int argc, char* args[]) {
 				
 				SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
 				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
+				
 			    //Soldado teste arrumar o angulo
-                double angulosd1;
-                if (200-local.x+WIDTH/2!=0){
-                    angulosd1=graus(atan(((double)200-local.y+HEIGHT/2-centro_torre.y)/((double)200-local.x+WIDTH/2-centro_torre.x)));
-                    if(200-local.x+WIDTH/2<=centro_torre.x){
-                        angulosd1+=180;
-                    }
-    
-                }
-                angulosd1 = (angulosd1 <0)?angulosd1+360:angulosd1;
-
-                SDL_FRect sd1 = {200.0-local.x+WIDTH/2,200-local.y+HEIGHT/2,32,32};
-                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1+135,NULL,SDL_FLIP_NONE);
+			    
+                double angulosd1 = anguloEntrePontos((SDL_FPoint){(200+16-local.x)*zoom+WIDTH/2,(200+16-local.y)*zoom+HEIGHT/2},centro_tanque);
+                angulosd1 = limitarDouble(angulosd1,360);
+                SDL_FRect sd1 = {(200.0-local.x)*zoom+WIDTH/2,(200.0-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
+                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1,NULL,SDL_FLIP_NONE);
+                
 				//painel de controle do chassi
 				sprintf(x, "x: %4.1lf", local.x);
 				sprintf(y, "y: %4.1lf", -local.y);
