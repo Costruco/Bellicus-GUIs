@@ -25,6 +25,7 @@ enum Movimento {
 
 typedef struct soldado {
 	SDL_FPoint local;
+	int variacao;
 	double folga_de_fuga;
 	double angulo;	
 	SDL_FPoint erro_na_mira;
@@ -89,11 +90,18 @@ void atualizarAnguloSoldado(soldado * sd1, SDL_FPoint alvo) {
 }
 
 void atualizarPosicaoSoldado(soldado * sd1, SDL_FPoint alvo) {
-    if (distanciaEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),alvo) < 200+sd1->folga_de_fuga) {
-		sd1->local = somar(sd1->local,mover(-3,sd1->angulo));
+	double dt = distanciaEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),alvo);
+	if (sd1->folga_de_fuga < 1 || dt < 120) {
+		atualizarAnguloSoldado(sd1,alvo);
+	}
+    if (dt < 200+sd1->folga_de_fuga) {
+		sd1->local = somar(sd1->local,mover(-2,sd1->angulo));
+		if (sd1->folga_de_fuga < 1) {
+			sd1->angulo += 180;
+		}
 		sd1->folga_de_fuga = 100;
-	} else if (distanciaEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),alvo) > 300) {
-        sd1->local = somar(sd1->local,mover(-2,sd1->angulo));
+	} else if (dt > 300) {
+        sd1->local = somar(sd1->local,mover(-1,sd1->angulo));
     }
 	sd1->folga_de_fuga = MAX(sd1->folga_de_fuga-5,0);
 }
@@ -108,8 +116,8 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 
 int checarVida(soldado batalhao[], int i, int * contingente, SDL_FPoint local, double angulo) {
 	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
-	if (normal.x+16 > local.x-97 && normal.x+16 < local.x+97) {
-		if (normal.y+16 > local.y-48 && normal.y+16 < local.y+48) {
+	if (normal.x > local.x-97 && normal.x < local.x+97) {
+		if (normal.y > local.y-48 && normal.y < local.y+48) {
 			batalhao[i] = batalhao[(*contingente)-1];
 			(*contingente)--;
 			return 1;
@@ -119,8 +127,16 @@ int checarVida(soldado batalhao[], int i, int * contingente, SDL_FPoint local, d
 }
 
 void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
+	double dx = (local.x-sd1.local.x)*escala, dy = (local.y-sd1.local.y)*escala;
+	if (dx < -ctela.x-50 || dx > ctela.x+50) {
+		return;
+	}
+	if (dy < -ctela.y-50 || dy > ctela.y+50) {
+		return;
+	}
+	SDL_Rect recorte = {32*sd1.variacao,0,32,32};
 	SDL_FRect base = {(sd1.local.x-16-local.x)*escala+ctela.x,(sd1.local.y-16-local.y)*escala+ctela.y,32*escala,32*escala};
-	SDL_RenderCopyExF(ren,textura,NULL,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
+	SDL_RenderCopyExF(ren,textura,&recorte,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
 }
 
 int main(int argc, char* args[]) {
@@ -140,7 +156,7 @@ int main(int argc, char* args[]) {
 					* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
 					* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
 					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
-                    * soldado1 = IMG_LoadTexture(ren, "./sprites/soldado.png");
+                    * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png");
 		
 		//angulos e posições das lagartas
 		double angulo = 0, 
@@ -303,6 +319,7 @@ int main(int argc, char* args[]) {
                 	for (s1 = 0; s1 < 5; s1++) {
 	                	SDL_FPoint var = {rand()%65,rand()%65};
 	                	soldado newsd = {somar(coord,var),
+	                					 rand()%4,
 										 0,
 										 0,
 										 (SDL_FPoint){SDL_GetTicks()%15,SDL_GetTicks()%15}};
@@ -315,12 +332,11 @@ int main(int argc, char* args[]) {
 				for (s1 = 0; s1 < contingente; s1++) {
 					if (checarVida(batalhao,s1,&contingente,local,angulo))
 						continue;
-					atualizarAnguloSoldado(&batalhao[s1],local);
 					atualizarPosicaoSoldado(&batalhao[s1],local);
 					for (s2 = s1+1; s2 < contingente; s2++) {
 						corrigirColisao(&batalhao[s1],&batalhao[s2]);
 					}
-					renderizarSoldado(ren,soldado1,batalhao[s1],local,centro_tanque,zoom);
+					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
 				}
                 
 				//chassi do tanque
