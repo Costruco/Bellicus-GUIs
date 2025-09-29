@@ -4,6 +4,7 @@
 #include "menu.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 #define MAX(a,b) (a>b)?a:b
@@ -22,6 +23,13 @@ enum Movimento {
 	DIR	
 };
 
+typedef struct soldado {
+	SDL_FPoint local;
+	double folga_de_fuga;
+	double angulo;	
+	SDL_FPoint erro_na_mira;
+} soldado;
+
 double graus(double radianos) {
 	return radianos*180/M_PI;
 }
@@ -29,7 +37,6 @@ double graus(double radianos) {
 double radianos(double angulo) {
 	return angulo*M_PI/180;
 }
-
 
 double limitarDouble(double n, double limite) {
 	if (n >= limite) {
@@ -76,12 +83,52 @@ SDL_FPoint rotacionar(SDL_FPoint o1, SDL_FPoint p1, double angulo) {
 	return newp;
 }
 
+void atualizarAnguloSoldado(soldado * sd1, SDL_FPoint alvo) {
+	sd1->angulo = anguloEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),somar(alvo,sd1->erro_na_mira));
+    sd1->angulo += (sd1->folga_de_fuga>0)?180:0;
+}
+
+void atualizarPosicaoSoldado(soldado * sd1, SDL_FPoint alvo) {
+    if (distanciaEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),alvo) < 200+sd1->folga_de_fuga) {
+		sd1->local = somar(sd1->local,mover(-3,sd1->angulo));
+		sd1->folga_de_fuga = 100;
+	} else if (distanciaEntrePontos(somar(sd1->local,(SDL_FPoint){16,16}),alvo) > 300) {
+        sd1->local = somar(sd1->local,mover(-2,sd1->angulo));
+    }
+	sd1->folga_de_fuga = MAX(sd1->folga_de_fuga-5,0);
+}
+
+void corrigirColisao(soldado * sd1, soldado * sd2) {
+	if (distanciaEntrePontos(sd1->local,sd2->local) <= 28) {
+		double angulo = anguloEntrePontos(sd1->local,sd2->local);
+		sd1->local = somar(sd1->local,mover(+2,angulo));
+		sd2->local = somar(sd2->local,mover(-2,angulo));
+	}
+}
+
+int checarVida(soldado batalhao[], int i, int * contingente, SDL_FPoint local, double angulo) {
+	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
+	if (normal.x+16 > local.x-97 && normal.x+16 < local.x+97) {
+		if (normal.y+16 > local.y-48 && normal.y+16 < local.y+48) {
+			batalhao[i] = batalhao[(*contingente)-1];
+			(*contingente)--;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
+	SDL_FRect base = {(sd1.local.x-16-local.x)*escala+ctela.x,(sd1.local.y-16-local.y)*escala+ctela.y,32*escala,32*escala};
+	SDL_RenderCopyExF(ren,textura,NULL,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
+}
+
 int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_ShowCursor(SDL_DISABLE);
-
+	srand(SDL_GetTicks());
 	MenuOption escolha = menu_loop(ren, win);
 
 	//MENU DO JOGO
@@ -97,8 +144,8 @@ int main(int argc, char* args[]) {
 		
 		//angulos e posições das lagartas
 		double angulo = 0, 
-			angulo_arma = 0, 
-			angulo_alvo = 0;
+			   angulo_arma = 0, 
+			   angulo_alvo = 0;
 			
 		//valores do jogo
 		int WIDTH, 
@@ -106,6 +153,7 @@ int main(int argc, char* args[]) {
 			FPS = 60, 
 			TPF = 1000/FPS;
 		SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
+		int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 		
 		//valores do veiculo
 		int VELOCIDADE_TRANS_MAXIMA = 441,
@@ -116,34 +164,36 @@ int main(int argc, char* args[]) {
 		double velocidade = 0,
 			   VELOCIDADE_ANGULAR = 0.9,
 			   VELOCIDADE_TORRE = 0.5,
-			   zoom = 0.9,
-			   mx=0,my=0;	
+			   zoom = 0.9;	
 			
 		SDL_FPoint torre_offset = {19,0},
 						zero = {0,0},
-				  		centro_tanque = {WIDTH/2,HEIGHT/2},
-						centro_soldado1 = {216,216},
-						centro_soldado2 = {316,316},
+				  		centro_tanque = {MWIDTH,MHEIGHT},
 				  		local = {0,0};
-		double folga_de_fuga1 = 0,folga_de_fuga2 = 0;
+				  		
+		soldado batalhao[100];
+		int contingente = 0;
+		
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
 		//informações dos paineis
 		char x[30],
-			y[30],
-			grau[30],
-			velocimetro[30],
-			numero[30],
-			state[30],
-			angulotorre[30],
-			anguloalvo[30];
+			 y[30],
+			 grau[30],
+			 velocimetro[30],
+			 numero[30],
+			 state[30],
+			 angulotorre[30],
+			 anguloalvo[30];
 			
 		//estado inicial
 		sprintf(state, "Estado: PONTO_MORTO");
 		
 		enum Movimento estado = PONTO_MORTO;
-		int gamerunning = 1, 
-		    intmx=0,intmy=0;
+		int gamerunning = 1,
+			mx=0,my=0,
+			esperaPorInimigo = 30;
+			
 		Uint32 espera = TPF;
 		SDL_Event evt;
 		while (gamerunning) {
@@ -199,8 +249,7 @@ int main(int argc, char* args[]) {
 				} else if (evt.type == SDL_QUIT) {
 					gamerunning = 0;
 				} else if (evt.type == SDL_MOUSEMOTION) {
-					SDL_GetMouseState(&intmx,&intmy);
-					mx = intmx, my = intmy;
+					SDL_GetMouseState(&mx,&my);
 				}
 			}
 			
@@ -239,39 +288,40 @@ int main(int argc, char* args[]) {
 				
 				
 				//Soldado teste arrumar o angulo
-                double angulosd1 = anguloEntrePontos((SDL_FPoint){(centro_soldado1.x-local.x)*zoom+WIDTH/2,(centro_soldado1.y-local.y)*zoom+HEIGHT/2},centro_tanque);
-                double angulosd2 = anguloEntrePontos((SDL_FPoint){(centro_soldado2.x-local.x)*zoom+WIDTH/2,(centro_soldado2.y-local.y)*zoom+HEIGHT/2},centro_tanque);
-                SDL_FRect sd1 = {(centro_soldado1.x-16-local.x)*zoom+WIDTH/2,(centro_soldado1.y-16-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
-                SDL_FRect sd2 = {(centro_soldado2.x-16-local.x)*zoom+WIDTH/2,(centro_soldado2.y-16-local.y)*zoom+HEIGHT/2,32*zoom,32*zoom};
-                
-                angulosd1 += (folga_de_fuga1>0)?180:0;
-                angulosd2 += (folga_de_fuga2>0)?180:0;
-                if (distanciaEntrePontos(centro_soldado1,local) < 200+folga_de_fuga1) {
-	        		centro_soldado1 = somar(centro_soldado1,mover(-5,angulosd1));
-	        		folga_de_fuga1 = 100;
-	        	} else if (distanciaEntrePontos(centro_soldado1,local) > 300) {
-	                centro_soldado1 = somar(centro_soldado1,mover(-3,angulosd1));
-                }
-	        	folga_de_fuga1 = MAX(folga_de_fuga1-5,0);
-                if (distanciaEntrePontos(centro_soldado2,local) < 200+folga_de_fuga2) {
-	        		centro_soldado2 = somar(centro_soldado2,mover(-5,angulosd2));	
-	        		folga_de_fuga2 = 100;
-	        	} else if (distanciaEntrePontos(centro_soldado2,local) > 300) {
-	                centro_soldado2 = somar(centro_soldado2,mover(-3,angulosd2));
-	        	}
-	        	folga_de_fuga2 = MAX(folga_de_fuga2-5,0);
-            	if (distanciaEntrePontos(centro_soldado1,centro_soldado2) <= 20) {
-            		if (angulosd2 > angulosd1) {
-            			centro_soldado2 = somar(centro_soldado2,mover(-2,angulosd2-90));
-	                	centro_soldado1 = somar(centro_soldado1,mover(-2,angulosd1+90));
-	            	} else {
-	            		centro_soldado2 = somar(centro_soldado2,mover(-2,angulosd2+90));
-	                	centro_soldado1 = somar(centro_soldado1,mover(-2,angulosd1-90));
+				int s1,s2;
+                if (contingente < 96 && SDL_GetTicks()%5000 < esperaPorInimigo) {
+                	esperaPorInimigo = 30;
+                	SDL_FPoint coord;
+                	if (rand()%2 == 0) {
+                		//coordenada fora dos limites superior e inferior da tela
+                		coord = {rand()%(WIDTH+101)-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
+					} else {
+						coord = {rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+101)-100};
+						//coordenada fora dos limites esquerdo e direito da tela
 					}
-	        	}
-	        	SDL_RenderCopyExF(ren,soldado1,NULL,&sd2,angulosd2,NULL,SDL_FLIP_NONE);
-                SDL_RenderCopyExF(ren,soldado1,NULL,&sd1,angulosd1,NULL,SDL_FLIP_NONE);
-                
+					coord = somar(coord,local);
+                	for (s1 = 0; s1 < 5; s1++) {
+	                	SDL_FPoint var = {rand()%65,rand()%65};
+	                	soldado newsd = {somar(coord,var),
+										 0,
+										 0,
+										 (SDL_FPoint){SDL_GetTicks()%15,SDL_GetTicks()%15}};
+						batalhao[contingente] = newsd;
+						contingente++;
+					}
+				} else {
+					esperaPorInimigo+=30;
+				}
+				for (s1 = 0; s1 < contingente; s1++) {
+					if (checarVida(batalhao,s1,&contingente,local,angulo))
+						continue;
+					atualizarAnguloSoldado(&batalhao[s1],local);
+					atualizarPosicaoSoldado(&batalhao[s1],local);
+					for (s2 = s1+1; s2 < contingente; s2++) {
+						corrigirColisao(&batalhao[s1],&batalhao[s2]);
+					}
+					renderizarSoldado(ren,soldado1,batalhao[s1],local,centro_tanque,zoom);
+				}
                 
 				//chassi do tanque
 				SDL_Texture * chassi;
@@ -279,7 +329,7 @@ int main(int argc, char* args[]) {
 					chassi = chassiHD;
 				else 
 					chassi = chassiLQ;
-				SDL_FRect base_chassi = {WIDTH/2-101*zoom,HEIGHT/2-52*zoom,203*zoom,104*zoom};
+				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
 				SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
 				
 				//laser desejado/laser real
