@@ -32,6 +32,7 @@ typedef struct particula {
 	SDL_FPoint local;
 	int nascimento;
 	int tempo_de_vida;
+    double angulo;
 } particula;
 
 typedef struct soldado {
@@ -50,7 +51,7 @@ typedef struct projetil {
 	double angulo;
 	double velocidade;
 	int variacao;	
-};
+}projetil;
 
 double graus(double radianos) {
 	return radianos*180/M_PI;
@@ -168,8 +169,13 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 	}
 }
 
-int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo) {
+int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, int * ns,  SDL_FPoint ctela,double escala, particula sangue[]) {
 	if (batalhao[i].vida == 0) {
+            particula pocca = {(SDL_FPoint){(batalhao[i].local.x-16-local.x)*escala+ctela.x,(batalhao[i].local.y-16-local.y)*escala+ctela.y},SDL_GetTicks(),            5000,batalhao[i].angulo};
+            sangue[*ns]= pocca;
+            *ns++;
+  
+      
 		batalhao[i] = batalhao[(*nSoldados)-1];
 		(*nSoldados)--;
 		return 1;
@@ -179,9 +185,22 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 		return 0;
 	if (numeroForaIntervalo(normal.y-local.y,-48,48))
 		return 0;
+    particula pocca = {(SDL_FPoint){(batalhao[i].local.x-16-local.x)*escala+ctela.x,(batalhao[i].local.y-16-local.y)*escala+ctela.y},SDL_GetTicks(),            500,batalhao[i].angulo};
+    sangue[*ns]= pocca;
+    *ns++;
 	batalhao[i] = batalhao[(*nSoldados)-1];
 	(*nSoldados)--;
+
+ 
 	return 1;
+}
+void renderizarSangue(SDL_Renderer * ren, SDL_Texture * textura, particula sg1, SDL_FPoint local, SDL_FPoint ctela, double escala){
+    
+    
+    SDL_FRect pc = {(sg1.local.x-32-local.x)*escala+ctela.x,(sg1.local.y-40-local.y)*escala+ctela.y,32*escala,40*escala};
+	SDL_RenderCopyExF(ren,textura,NULL,&pc,sg1.angulo,NULL,SDL_FLIP_NONE);
+
+
 }
 
 void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
@@ -216,13 +235,16 @@ int main(int argc, char* args[]) {
 					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
                     * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
 					* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
-					* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png");
+					* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
+                    * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png");
 		
 		//angulos e posiÃ§Ãµes das lagartas
 		double angulo = 0, 
 			   angulo_arma = 0, 
-			   angulo_alvo = 0;
-			
+			   angulo_alvo = 0,
+               ang_poca;
+		
+
 		//valores do jogo
 		int WIDTH, 
 			HEIGHT;
@@ -253,9 +275,11 @@ int main(int argc, char* args[]) {
 		particula marcos[100];
 		soldado batalhao[100];
 		projetil hell[100];
+        particula sangue[100];
 		int nParticulas = 0,
 			nSoldados = 0,
-			nBalas = 0;
+			nBalas = 0,
+            nSangue=0;
 		
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
@@ -387,16 +411,16 @@ int main(int argc, char* args[]) {
 				double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
 				mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
 				
-				//spawn e atualização de soldados
+				//spawn e atualiza\E7\E3o de soldados
 				int s1,s2;
                 if (nSoldados < 96 && SDL_GetTicks()-ultimoSpawn >= esperaPorInimigo) {
                 	ultimoSpawn = SDL_GetTicks();
                 	SDL_FPoint coord;
                 	if (rand()%2 == 0) {
                 		//coordenada fora dos limites superior e inferior da tela
-                		coord = {rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
+                		coord = (SDL_FPoint){rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
 					} else {
-						coord = {rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
+						coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
 						//coordenada fora dos limites esquerdo e direito da tela
 					}
 					coord = somar(coord,local);
@@ -412,12 +436,15 @@ int main(int argc, char* args[]) {
 					}
 				}
 				for (s1 = 0; s1 < nSoldados; s1++) {
-					if (checarVida(batalhao,s1,&nSoldados,local,angulo))
+					if (checarVida(batalhao,s1,&nSoldados,local,angulo,&nSangue,centro_tanque,zoom, sangue))
 						continue;
 					atualizarPosicaoSoldado(&batalhao[s1],local);
 					for (s2 = s1+1; s2 < nSoldados; s2++) {
 						corrigirColisao(&batalhao[s1],&batalhao[s2]);
 					}
+                    int bruno = 0;
+                    renderizarSangue(ren,sangue_arrasto,sangue[bruno],local,centro_tanque,zoom);
+bruno++;
 					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
 				}
                 
@@ -430,7 +457,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
 				SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
 				
-				//atualização de projeteis
+				//atualiza\E7\E3o de projeteis
 				int b1;
 				for (b1 = 0; b1 < nBalas; b1++) {
 					if (hell[b1].distanciaAlvo <= 0) {
@@ -442,7 +469,7 @@ int main(int argc, char* args[]) {
 							batalhao[s1].vida = 0;
 						}
 						if (nParticulas < 100) {
-							particula newpart = {(SDL_FPoint){hell[b1].local.x-50,hell[b1].local.y-50},SDL_GetTicks(),500};
+							particula newpart = {(SDL_FPoint){hell[b1].local.x-50,hell[b1].local.y-50},SDL_GetTicks(),500,0};
 							marcos[nParticulas++] = newpart;
 						}
 						hell[b1] = hell[nBalas---1];
@@ -467,7 +494,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
 				SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
 				
-				//atualização de particulas
+				//atualiza\E7\E3o de particulas
 				int p1;
 				for (p1 = 0; p1 < nParticulas; p1++) {
 					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
