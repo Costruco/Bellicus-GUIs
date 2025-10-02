@@ -379,7 +379,7 @@ int main(int argc, char* args[]) {
 				SDL_SetRenderDrawColor(ren,0,100,0,255);
 				SDL_RenderClear(ren);
 
-				//metralhadora coaxial
+				//metralhadora móvel
 				int balaMetral;
 
 				
@@ -422,8 +422,14 @@ int main(int argc, char* args[]) {
 				}
                 //sangue
                 for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-16)*zoom+MWIDTH,(sangue[t1].local.y-local.y-20)*zoom+MHEIGHT,40*zoom*sangue[t1].velocidade/200,32*zoom};
-					SDL_RenderCopyExF(ren,sangue_arrasto,NULL,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
+					SDL_Rect recorte = {0,0,60,50};
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,(sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,60*zoom*sangue[t1].velocidade/200,50*zoom};
+					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
+				}
+				for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
+					SDL_Rect recorte = {60,0,60,50};
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,(sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,60*zoom*sangue[t1].velocidade/200,50*zoom};
+					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
 				
 				//spawn e atualiza\E7\E3o de soldados
