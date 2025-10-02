@@ -183,11 +183,12 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 		return 0;
 	if (numeroForaIntervalo(normal.y-local.y,-48,48))
 		return 0;
-    if (*nSangue < 100) {
-	    terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
-		sangue[(*nSangue)++] = newsangue;
+    
+	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
+	sangue[((*nSangue)++)%100] = newsangue;
         
-    }
+
+    
 	batalhao[i] = batalhao[(*nSoldados)-1];
 	(*nSoldados)--;
 	return 1;
@@ -377,6 +378,10 @@ int main(int argc, char* args[]) {
 				//fundo verde
 				SDL_SetRenderDrawColor(ren,0,100,0,255);
 				SDL_RenderClear(ren);
+
+				//metralhadora coaxial
+				int balaMetral;
+
 				
 				//grade chao
 				int m;
@@ -405,18 +410,18 @@ int main(int argc, char* args[]) {
 				
 				//atualiza\E7\E3o do terreno;
 				
-				for (int t1 = 0; t1 < nObstaculos; t1++) {
+				for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
 					SDL_Rect recorte = {0,0,100,100};
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
-				for (int t1 = 0; t1 < nObstaculos; t1++) {
+				for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
 					SDL_Rect recorte = {100,0,100,100};
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
                 //sangue
-                for (int t1 = 0; t1 < nSangue; t1++) {
+                for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
 					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-16)*zoom+MWIDTH,(sangue[t1].local.y-local.y-20)*zoom+MHEIGHT,40*zoom*sangue[t1].velocidade/200,32*zoom};
 					SDL_RenderCopyExF(ren,sangue_arrasto,NULL,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
@@ -473,10 +478,10 @@ int main(int argc, char* args[]) {
 							particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},SDL_GetTicks(),1000};
 							marcos[nParticulas++] = newpart;
 						}
-						if (nObstaculos < 100) {
-							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
-							obstaculos[nObstaculos++] = newobs;
-						}
+						
+						terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
+						obstaculos[(nObstaculos++)%100] = newobs;
+						
 						hell[b1] = hell[nBalas---1];
 						continue;
 					}

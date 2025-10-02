@@ -6,3 +6,4 @@
 include/
 lib/
 SDL2_*.c
+Makefile
