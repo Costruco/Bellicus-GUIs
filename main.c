@@ -30,6 +30,7 @@ enum Movimento {
 
 typedef struct terreno {
 	SDL_FPoint local;
+    double angulo;
 } terreno;
 
 typedef struct particula {
@@ -170,7 +171,7 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 	}
 }
 
-int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo) {
+int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], int * nSangue) {
 	if (batalhao[i].vida == 0) {
 		batalhao[i] = batalhao[(*nSoldados)-1];
 		(*nSoldados)--;
@@ -181,6 +182,11 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 		return 0;
 	if (numeroForaIntervalo(normal.y-local.y,-48,48))
 		return 0;
+    if (*nSangue < 100) {
+	    terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},(batalhao[i].angulo)+90};
+		sangue[(*nSangue)++] = newsangue;
+        
+    }
 	batalhao[i] = batalhao[(*nSoldados)-1];
 	(*nSoldados)--;
 	return 1;
@@ -219,7 +225,8 @@ int main(int argc, char* args[]) {
                     * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
 					* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
 					* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
-					* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png");
+					* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
+                    * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png");
 		
 		//angulos e posiÃ§Ãµes das lagartas
 		double angulo = 0, 
@@ -252,7 +259,7 @@ int main(int argc, char* args[]) {
 				   centro_torre_relativo = torre_offset,
 				   mira_real,
 				   local = {0,0};
-				  		
+		terreno sangue[100];		  		
 		terreno obstaculos[100];
 		particula marcos[100];
 		soldado batalhao[100];
@@ -260,7 +267,8 @@ int main(int argc, char* args[]) {
 		int nObstaculos = 0,
 			nParticulas = 0,
 			nSoldados = 0,
-			nBalas = 0;
+			nBalas = 0,
+            nSangue=0;
 		
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
@@ -394,7 +402,7 @@ int main(int argc, char* args[]) {
 				double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
 				mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
 				
-				//atualização do terreno;
+				//atualiza\E7\E3o do terreno;
 				int t1;
 				for (t1 = 0; t1 < nObstaculos; t1++) {
 					SDL_Rect recorte = {0,0,100,100};
@@ -406,17 +414,23 @@ int main(int argc, char* args[]) {
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
+                //sangue
+                for (t1 = 0; t1 < nSangue; t1++) {
+			
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-16)*zoom+MWIDTH,(sangue[t1].local.y-local.y-20)*zoom+MHEIGHT,32*zoom,40*zoom};
+					SDL_RenderCopyExF(ren,sangue_arrasto,NULL,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
+				}
 				
-				//spawn e atualização de soldados
+				//spawn e atualiza\E7\E3o de soldados
 				int s1,s2;
                 if (nSoldados < 96 && SDL_GetTicks()-ultimoSpawn >= esperaPorInimigo) {
                 	ultimoSpawn = SDL_GetTicks();
                 	SDL_FPoint coord;
                 	if (rand()%2 == 0) {
                 		//coordenada fora dos limites superior e inferior da tela
-                		coord = {rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
+                		coord = (SDL_FPoint){rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
 					} else {
-						coord = {rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
+						coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
 						//coordenada fora dos limites esquerdo e direito da tela
 					}
 					coord = somar(coord,local);
@@ -432,12 +446,13 @@ int main(int argc, char* args[]) {
 					}
 				}
 				for (s1 = 0; s1 < nSoldados; s1++) {
-					if (checarVida(batalhao,s1,&nSoldados,local,angulo))
+					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,&nSangue))
 						continue;
 					atualizarPosicaoSoldado(&batalhao[s1],local);
 					for (s2 = s1+1; s2 < nSoldados; s2++) {
 						corrigirColisao(&batalhao[s1],&batalhao[s2]);
 					}
+                    
 					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
 				}
                 
@@ -450,7 +465,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
 				SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
 				
-				//atualização de projeteis
+				//atualiza\E7\E3o de projeteis
 				int b1;
 				for (b1 = 0; b1 < nBalas; b1++) {
 					if (hell[b1].distanciaAlvo <= 0) {
@@ -459,7 +474,7 @@ int main(int argc, char* args[]) {
 							marcos[nParticulas++] = newpart;
 						}
 						if (nObstaculos < 100) {
-							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y}};
+							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0};
 							obstaculos[nObstaculos++] = newobs;
 						}
 						hell[b1] = hell[nBalas---1];
@@ -484,7 +499,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
 				SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
 				
-				//atualização de particulas
+				//atualiza\E7\E3o de particulas
 				int p1;
 				for (p1 = 0; p1 < nParticulas; p1++) {
 					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
