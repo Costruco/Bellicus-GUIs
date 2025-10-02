@@ -31,6 +31,7 @@ enum Movimento {
 typedef struct terreno {
 	SDL_FPoint local;
     double angulo;
+    double velocidade;
 } terreno;
 
 typedef struct particula {
@@ -171,7 +172,7 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 	}
 }
 
-int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], int * nSangue) {
+int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue) {
 	if (batalhao[i].vida == 0) {
 		batalhao[i] = batalhao[(*nSoldados)-1];
 		(*nSoldados)--;
@@ -183,7 +184,7 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 	if (numeroForaIntervalo(normal.y-local.y,-48,48))
 		return 0;
     if (*nSangue < 100) {
-	    terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},(batalhao[i].angulo)+90};
+	    terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
 		sangue[(*nSangue)++] = newsangue;
         
     }
@@ -403,21 +404,20 @@ int main(int argc, char* args[]) {
 				mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
 				
 				//atualiza\E7\E3o do terreno;
-				int t1;
-				for (t1 = 0; t1 < nObstaculos; t1++) {
+				
+				for (int t1 = 0; t1 < nObstaculos; t1++) {
 					SDL_Rect recorte = {0,0,100,100};
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
-				for (t1 = 0; t1 < nObstaculos; t1++) {
+				for (int t1 = 0; t1 < nObstaculos; t1++) {
 					SDL_Rect recorte = {100,0,100,100};
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
                 //sangue
-                for (t1 = 0; t1 < nSangue; t1++) {
-			
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-16)*zoom+MWIDTH,(sangue[t1].local.y-local.y-20)*zoom+MHEIGHT,32*zoom,40*zoom};
+                for (int t1 = 0; t1 < nSangue; t1++) {
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-16)*zoom+MWIDTH,(sangue[t1].local.y-local.y-20)*zoom+MHEIGHT,40*zoom*sangue[t1].velocidade/200,32*zoom};
 					SDL_RenderCopyExF(ren,sangue_arrasto,NULL,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
 				
@@ -446,7 +446,7 @@ int main(int argc, char* args[]) {
 					}
 				}
 				for (s1 = 0; s1 < nSoldados; s1++) {
-					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,&nSangue))
+					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue))
 						continue;
 					atualizarPosicaoSoldado(&batalhao[s1],local);
 					for (s2 = s1+1; s2 < nSoldados; s2++) {
@@ -474,7 +474,7 @@ int main(int argc, char* args[]) {
 							marcos[nParticulas++] = newpart;
 						}
 						if (nObstaculos < 100) {
-							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0};
+							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
 							obstaculos[nObstaculos++] = newobs;
 						}
 						hell[b1] = hell[nBalas---1];
