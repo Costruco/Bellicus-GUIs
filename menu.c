@@ -3,18 +3,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 
+#include "espera.h"
 #include "menu.h"
-
-int AUX_WaitEventTimeoutCount(SDL_Event* evt, Uint32 * ms) {
-	Uint32 antes = SDL_GetTicks();
-	int isevt = SDL_WaitEventTimeout(evt, *ms);
-	Uint32 deltaEspera = SDL_GetTicks()-antes, novaEspera = *ms-deltaEspera;
-	if (novaEspera > *ms)
-		*ms = 0;
-	else
-		*ms -= deltaEspera;
-	return isevt;
-}
 
 MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win) {
     SDL_Surface* tempSurface = IMG_Load("./img/bellicus_inicio.png");

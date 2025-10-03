@@ -1,15 +1,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <SDL2/SDL_image.h>
-#include "menu.h"
-#include <math.h>
+#include <SDL2/SDL_mixer.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
-
-#define MAX(a,b) (a>b)?a:b
-#define MIN(a,b) (a<b)?a:b
-#define MOD(a) (a>=0)?a:-a
+#include "aritmetica.h"
+#include "espera.h"
+#include "menu.h"
 
 #define FPS 120
 #define TPF 1000/FPS
@@ -58,65 +58,6 @@ typedef struct projetil {
 	int variacao;	
 } projetil;
 
-double graus(double radianos) {
-	return radianos*180/M_PI;
-}
-
-double radianos(double angulo) {
-	return angulo*M_PI/180;
-}
-
-double limitarDouble(double n, double limite) {
-	n = fmod(n,limite);
-	if (n < 0)
-		return n+limite;
-	return n;
-}
-
-double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
-	double a = p1.x-p2.x, b = p1.y-p2.y;
-	return sqrt(a*a+b*b);
-}
-
-double anguloEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
-	double angulo;
-	if (p1.x-p2.x != 0) {
-		angulo = graus(atan((p1.y-p2.y)/(p1.x-p2.x)));
-		if (p1.x < p2.x)
-			angulo += 180;
-	}
-	return limitarDouble(angulo,360);
-}
-
-int numeroEntreIntervalo(int n, int a, int b) {
-	return (n >= a && n <= b)?1:0;
-}
-
-int numeroForaIntervalo(int n, int a, int b) {
-	return (n < a || n > b)?1:0;
-}
-
-SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
-	SDL_FPoint soma = {p1.x+p2.x, p1.y+p2.y}; 
-	return soma;
-}
-
-SDL_FPoint escalonar(SDL_FPoint p1, double escala) {
-	SDL_FPoint produto = {p1.x*escala,p1.y*escala};
-	return produto;
-}
-
-SDL_FPoint mover(double velocidade, double angulo) {
-	SDL_FPoint newp = {velocidade*cos(radianos(angulo)), velocidade*sin(radianos(angulo))};
-	return newp;
-}
-
-SDL_FPoint rotacionar(SDL_FPoint o1, SDL_FPoint p1, double angulo) {
-	SDL_FPoint newp = {(p1.x-o1.x)*cos(radianos(angulo)) - (p1.y-o1.y)*sin(radianos(angulo)) + o1.x,
-	                  (p1.x-o1.x)*sin(radianos(angulo)) + (p1.y-o1.y)*cos(radianos(angulo)) + o1.y};
-	return newp;
-}
-
 void atualizarPosicaoProjetil(projetil * bl1) {
 	SDL_FPoint ptdt = mover(bl1->velocidade/FPS,bl1->angulo);
 	double dt = distanciaEntrePontos((SDL_FPoint){0,0},ptdt);
@@ -131,10 +72,10 @@ void atualizarPosicaoProjetil(projetil * bl1) {
 
 void renderizarProjetil(SDL_Renderer * ren, SDL_Texture * textura, projetil bl1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
 	double dx = (local.x-bl1.local.x)*escala, dy = (local.y-bl1.local.y)*escala;
-	if (numeroForaIntervalo(dx,-ctela.x-50,ctela.x+50)) {
+	if (!numeroDentroIntervalo(dx,-ctela.x-50,ctela.x+50)) {
 		return;
 	}
-	if (numeroForaIntervalo(dy,-ctela.y-50,ctela.y+50)) {
+	if (!numeroDentroIntervalo(dy,-ctela.y-50,ctela.y+50)) {
 		return;
 	}
 	SDL_Rect recorte = {9*bl1.variacao,0,9,3};
@@ -179,9 +120,9 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 		return 1;
 	}
 	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
-	if (numeroForaIntervalo(normal.x-local.x,-97,97))
+	if (!numeroDentroIntervalo(normal.x-local.x,-97,97))
 		return 0;
-	if (numeroForaIntervalo(normal.y-local.y,-48,48))
+	if (!numeroDentroIntervalo(normal.y-local.y,-48,48))
 		return 0;
     
 	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
@@ -196,10 +137,10 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 
 void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
 	double dx = (local.x-sd1.local.x)*escala, dy = (local.y-sd1.local.y)*escala;
-	if (numeroForaIntervalo(dx,-ctela.x-50,ctela.x+50)) {
+	if (!numeroDentroIntervalo(dx,-ctela.x-50,ctela.x+50)) {
 		return;
 	}
-	if (numeroForaIntervalo(dy,-ctela.y-50,ctela.y+50)) {
+	if (!numeroDentroIntervalo(dy,-ctela.y-50,ctela.y+50)) {
 		return;
 	}
 	SDL_Rect recorte = {32*sd1.variacao,0,32,32};
@@ -423,12 +364,18 @@ int main(int argc, char* args[]) {
                 //sangue
                 for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
 					SDL_Rect recorte = {0,0,60,50};
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,(sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,60*zoom*sangue[t1].velocidade/200,50*zoom};
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
+											 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
+											 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+											 50*zoom};
 					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
 				for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
 					SDL_Rect recorte = {60,0,60,50};
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,(sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,60*zoom*sangue[t1].velocidade/200,50*zoom};
+					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
+											 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
+											 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+											 50*zoom};
 					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
 				
@@ -518,9 +465,9 @@ int main(int argc, char* args[]) {
 						marcos[p1] = marcos[nParticulas---1];
 					}
 					for (s1 = 0; s1 < nSoldados; s1++) {
-						if (numeroForaIntervalo(batalhao[s1].local.x,hell[b1].local.x-7.5*tempo_vivo/100,hell[b1].local.x+7.5*tempo_vivo/100))
+						if (!numeroDentroIntervalo(batalhao[s1].local.x,hell[b1].local.x-7.5*tempo_vivo/100,hell[b1].local.x+7.5*tempo_vivo/100))
 							continue;
-						if (numeroForaIntervalo(batalhao[s1].local.y,hell[b1].local.y-7.5*tempo_vivo/100,hell[b1].local.y+7.5*tempo_vivo/100))
+						if (!numeroDentroIntervalo(batalhao[s1].local.y,hell[b1].local.y-7.5*tempo_vivo/100,hell[b1].local.y+7.5*tempo_vivo/100))
 							continue;
 						batalhao[s1].vida = 0;
 					}
