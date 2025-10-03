@@ -45,6 +45,11 @@ SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
 	return soma;
 }
 
+SDL_FPoint subtrair(SDL_FPoint p1, SDL_FPoint p2){
+	SDL_FPoint sub = {p1.x-p2.x, p1.y-p2.y};
+	return sub;
+}
+
 SDL_FPoint escalonar(SDL_FPoint p1, double escala) {
 	SDL_FPoint produto = {p1.x*escala,p1.y*escala};
 	return produto;

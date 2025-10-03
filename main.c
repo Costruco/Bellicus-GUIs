@@ -55,6 +55,7 @@ typedef struct projetil {
 	double peso;
 	double angulo;
 	double velocidade;
+	int tipo;
 	int variacao;	
 } projetil;
 
@@ -135,6 +136,20 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 	return 1;
 }
 
+//WIP - Colisão bala com soldado
+int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
+	if(distanciaEntrePontos(batalhao[i].local, bullet.local) <= 0){
+		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x, batalhao[i].local.y}, angulo+180,0};
+		sangue[((*nSangue)++)%100] = newsangue;
+
+		batalhao[i] = batalhao[(*nSoldados)-1];
+		(*nSoldados)--;
+		return 1;
+	}
+	return 0;
+	
+}
+
 void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, SDL_FPoint local, SDL_FPoint ctela, double escala) {
 	double dx = (local.x-sd1.local.x)*escala, dy = (local.y-sd1.local.y)*escala;
 	if (!numeroDentroIntervalo(dx,-ctela.x-50,ctela.x+50)) {
@@ -167,13 +182,16 @@ int main(int argc, char* args[]) {
 					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
                     * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
 					* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
+					* municao_metralhadora = 
+					IMG_LoadTexture(ren, "./sprites/municao_metralhadora.png"),
 					* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
 					* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
                     * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png");
 		
 		//angulos e posições das lagartas
 		double angulo = 0, 
-			   angulo_arma = 0, 
+			   angulo_arma = 0,
+			   angulo_metra = 0, 
 			   angulo_alvo = 0;
 			
 		//valores do jogo
@@ -192,12 +210,15 @@ int main(int argc, char* args[]) {
 			   VELOCIDADE_ANGULAR = 0.45,
 			   VELOCIDADE_TORRE = 0.25,
 			   TEMPO_DE_RECARGA = 1000,
+			   TEMPO_DE_RECARGA_METRA = 100,
 			   VELOCIDADE_DE_RECARGA = 1,
+			   VELOCIDADE_DE_RECARGA_METRA = 1,
 			   zoom = 0.9;	
 			
 		SDL_FPoint torre_offset = {19,0},
-				   zero = {0,0},
+				   metra_offset = {58,18},
 				   centro_tanque = {MWIDTH,MHEIGHT},
+				   zero = {0,0},
 				   centro_torre_absoluto = somar(centro_tanque,torre_offset),
 				   centro_torre_relativo = torre_offset,
 				   mira_real,
@@ -206,11 +227,13 @@ int main(int argc, char* args[]) {
 		terreno obstaculos[100];
 		particula marcos[100];
 		soldado batalhao[100];
-		projetil hell[100];
+		projetil hell[100],
+				 bullet[100];
 		int nObstaculos = 0,
 			nParticulas = 0,
 			nSoldados = 0,
 			nBalas = 0,
+			nBalasMetra = 0,
             nSangue=0;
 		
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
@@ -233,6 +256,7 @@ int main(int argc, char* args[]) {
 			mx=0,my=0,
 			esperaPorInimigo = 2000,
 			ultimoDisparo = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
+			ultimoDisparoMetra = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
 			ultimoSpawn = SDL_GetTicks();
 			
 		Uint32 espera = TPF;
@@ -298,7 +322,6 @@ int main(int argc, char* args[]) {
 					break;
 				case SDL_MOUSEBUTTONDOWN:
 					//spawn de projeteis
-					int b1;
 					if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
 						ultimoDisparo = SDL_GetTicks();
 						SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),mover(100,angulo_arma));
@@ -307,6 +330,7 @@ int main(int argc, char* args[]) {
 										  0,
 										  angulo_arma,
 										  2000,
+										  0,
 										  1};
 						hell[nBalas++] = newbl;
 					}
@@ -320,10 +344,27 @@ int main(int argc, char* args[]) {
 				SDL_SetRenderDrawColor(ren,0,100,0,255);
 				SDL_RenderClear(ren);
 
-				//metralhadora móvel
-				int balaMetral;
-
 				
+				//centro da metralhadora movel
+				SDL_FPoint centro_metra_relativo = rotacionar(zero,metra_offset,angulo);
+				SDL_FPoint centro_metra_absoluto = somar(centro_tanque, centro_metra_relativo);
+				
+				//metralhadora movel
+				if(SDL_GetTicks()-ultimoDisparoMetra >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
+					ultimoDisparoMetra = SDL_GetTicks();
+					SDL_FPoint ponta_da_metra = somar(somar(local, rotacionar(zero, metra_offset, angulo)), mover(19, angulo_metra));
+					projetil newtiro = {ponta_da_metra,
+										500,
+										0,
+										angulo_metra,
+										500,
+										1,
+										0};
+					bullet[nBalasMetra++] = newtiro;
+				}
+				SDL_FRect base_metra = {local.x+metra_offset.x,local.y+metra_offset.y,10,3};
+				SDL_RenderCopyExF(ren, municao_metralhadora, NULL,&base_metra, 0, NULL, SDL_FLIP_NONE);
+			
 				//grade chao
 				int m;
 				for (m = 0; m < MWIDTH/zoom; m++) {
@@ -379,7 +420,7 @@ int main(int argc, char* args[]) {
 					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 				}
 				
-				//spawn e atualiza\E7\E3o de soldados
+				//spawn e atualização de soldados
 				int s1,s2;
                 if (nSoldados < 96 && SDL_GetTicks()-ultimoSpawn >= esperaPorInimigo) {
                 	ultimoSpawn = SDL_GetTicks();
@@ -426,7 +467,7 @@ int main(int argc, char* args[]) {
 				//atualiza\E7\E3o de projeteis
 				int b1;
 				for (b1 = 0; b1 < nBalas; b1++) {
-					if (hell[b1].distanciaAlvo <= 0) {
+					if (hell[b1].distanciaAlvo <= 0 && hell[b1].tipo == 0) {
 						if (nParticulas < 100) {
 							particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},SDL_GetTicks(),1000};
 							marcos[nParticulas++] = newpart;
@@ -439,7 +480,18 @@ int main(int argc, char* args[]) {
 						continue;
 					}
 					atualizarPosicaoProjetil(&hell[b1]);
-					renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
+					if (hell[b1].tipo == 0) renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
+
+				}
+				//atualiza bala da metralhadora
+				int b2;
+				for(b2 = 0; b2 < nBalasMetra; b2++){
+					if(bullet[b2].distanciaAlvo <= 0 && bullet[b2].tipo == 1){
+						bullet[b2] = bullet[nBalasMetra---1];
+						continue;
+					}
+					atualizarPosicaoProjetil(&bullet[b2]);
+					if(bullet[b2].tipo == 1) renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom); 
 				}
 				
 				//laser desejado/laser real
@@ -521,13 +573,15 @@ int main(int argc, char* args[]) {
 						velocidade = VELOCIDADE_TRANS_MAXIMA;
 					angulo -= VELOCIDADE_ANGULAR;
 					angulo_arma -= VELOCIDADE_ANGULAR;
+					angulo_metra -= VELOCIDADE_ANGULAR;
 				} else if (estado == DIR_TRANSV) {
 					if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
 						velocidade += ACELERACAO_TRANS;
 					else
 						velocidade = VELOCIDADE_TRANS_MAXIMA;
 					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;		
+					angulo_arma += VELOCIDADE_ANGULAR;
+					angulo_metra += VELOCIDADE_ANGULAR;	
 				} else if (estado == REV) {
 					if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
 						velocidade -= ACELERACAO_REV;
@@ -539,7 +593,8 @@ int main(int argc, char* args[]) {
 					else
 						velocidade = -VELOCIDADE_REV_MAXIMA;
 					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;		
+					angulo_arma += VELOCIDADE_ANGULAR;
+					angulo_metra += VELOCIDADE_ANGULAR;		
 				} else if (estado == DIR_REV) {
 					if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
 						velocidade -= ACELERACAO_REV;
@@ -547,16 +602,20 @@ int main(int argc, char* args[]) {
 						velocidade = -VELOCIDADE_REV_MAXIMA;
 					angulo -= VELOCIDADE_ANGULAR;
 					angulo_arma -= VELOCIDADE_ANGULAR;
+					angulo_metra -= VELOCIDADE_ANGULAR;
 				} else if (estado == ESQ) {
 					angulo -= VELOCIDADE_ANGULAR;
 					angulo_arma -= VELOCIDADE_ANGULAR;
+					angulo_metra -= VELOCIDADE_ANGULAR;
 				} else if (estado == DIR) {
 					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;			
+					angulo_arma += VELOCIDADE_ANGULAR;
+					angulo_metra += VELOCIDADE_ANGULAR;
 				}
 				//atualiza os angulos
 				angulo_arma = limitarDouble(angulo_arma,360);
 				angulo = limitarDouble(angulo,360);
+				angulo_metra = limitarDouble(angulo_metra,360);
 					
 				if (angulo_arma == angulo_alvo)
 					;
