@@ -20,9 +20,9 @@ double radianos(double angulo) {
 double limitarDouble(double n, double limite) {
 	if (n > 0)
 		return n-(int)(n/limite)*limite;
-	else 
+	else if (n < 0)
 		return n-(int)(n/limite)*limite+limite;
-	return 0;
+	return n;
 }
 
 double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
