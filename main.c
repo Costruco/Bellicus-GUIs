@@ -136,9 +136,8 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 	return 1;
 }
 
-//WIP - Colisão bala com soldado
 int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
-	if(distanciaEntrePontos(batalhao[i].local, bullet.local) < 32){
+	if(distanciaEntrePontos(batalhao[i].local, bullet.local) < 16){
 		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x, batalhao[i].local.y}, angulo+180,0};
 
 		sangue[((*nSangue)++)%100] = newsangue;
@@ -229,7 +228,7 @@ int main(int argc, char* args[]) {
 		particula marcos[100];
 		soldado batalhao[100];
 		projetil hell[100],
-				 bullet[10000];
+				 bullet[100];
 		int nObstaculos = 0,
 			nParticulas = 0,
 			nSoldados = 0,
@@ -482,13 +481,25 @@ int main(int argc, char* args[]) {
 
 				}
 
-				int b2;
+				int b2; int s;
 				for(b2 = 0; b2 < nBalasMetra; b2++){
 					atualizarPosicaoProjetil(&bullet[b2]);
-					if((colisaoBala(batalhao, sangue, b2, bullet[b2], angulo_metra, &nSoldados, &nSangue) || bullet[b2].distanciaAlvo < 0) && bullet[b2].tipo == 1){
-						bullet[b2] = bullet[nBalasMetra---1];
+
+					int bala_fora = (bullet[b2].distanciaAlvo < 0);
+					int matou = 0;
+					for(s = 0;s < nSoldados; s++){
+						if((colisaoBala(batalhao, sangue, s, bullet[b2], angulo_metra, &nSoldados, &nSangue))){
+							matou = 1;
+							break;
+						}
+					}
+
+					if((matou || bala_fora) && bullet[b2].tipo == 1){
+						bullet[b2] = bullet[--nBalasMetra];
+        				b2--;
 						continue;
 					}
+					
 					if(bullet[b2].tipo == 1) renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom); 
 				}
 				
