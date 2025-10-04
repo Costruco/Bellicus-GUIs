@@ -138,8 +138,9 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 
 //WIP - Colisão bala com soldado
 int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
-	if(distanciaEntrePontos(batalhao[i].local, bullet.local) <= 0){
+	if(distanciaEntrePontos(batalhao[i].local, bullet.local) < 32){
 		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x, batalhao[i].local.y}, angulo+180,0};
+
 		sangue[((*nSangue)++)%100] = newsangue;
 
 		batalhao[i] = batalhao[(*nSoldados)-1];
@@ -228,7 +229,7 @@ int main(int argc, char* args[]) {
 		particula marcos[100];
 		soldado batalhao[100];
 		projetil hell[100],
-				 bullet[100];
+				 bullet[10000];
 		int nObstaculos = 0,
 			nParticulas = 0,
 			nSoldados = 0,
@@ -362,9 +363,7 @@ int main(int argc, char* args[]) {
 										0};
 					bullet[nBalasMetra++] = newtiro;
 				}
-				SDL_FRect base_metra = {local.x+metra_offset.x,local.y+metra_offset.y,10,3};
-				SDL_RenderCopyExF(ren, municao_metralhadora, NULL,&base_metra, 0, NULL, SDL_FLIP_NONE);
-			
+
 				//grade chao
 				int m;
 				for (m = 0; m < MWIDTH/zoom; m++) {
@@ -390,8 +389,7 @@ int main(int argc, char* args[]) {
 				double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
 				mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
 				
-				//atualiza\E7\E3o do terreno;
-				
+				//atualização do terreno;
 				for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
 					SDL_Rect recorte = {0,0,100,100};
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
@@ -464,7 +462,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
 				SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
 				
-				//atualiza\E7\E3o de projeteis
+				//atualização de projeteis
 				int b1;
 				for (b1 = 0; b1 < nBalas; b1++) {
 					if (hell[b1].distanciaAlvo <= 0 && hell[b1].tipo == 0) {
@@ -483,14 +481,14 @@ int main(int argc, char* args[]) {
 					if (hell[b1].tipo == 0) renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
 
 				}
-				//atualiza bala da metralhadora
+
 				int b2;
 				for(b2 = 0; b2 < nBalasMetra; b2++){
-					if(bullet[b2].distanciaAlvo <= 0 && bullet[b2].tipo == 1){
+					atualizarPosicaoProjetil(&bullet[b2]);
+					if((colisaoBala(batalhao, sangue, b2, bullet[b2], angulo_metra, &nSoldados, &nSangue) || bullet[b2].distanciaAlvo < 0) && bullet[b2].tipo == 1){
 						bullet[b2] = bullet[nBalasMetra---1];
 						continue;
 					}
-					atualizarPosicaoProjetil(&bullet[b2]);
 					if(bullet[b2].tipo == 1) renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom); 
 				}
 				
@@ -509,7 +507,7 @@ int main(int argc, char* args[]) {
 				SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
 				SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
 				
-				//atualiza\E7\E3o de particulas
+				//atualização de particulas
 				int p1;
 				for (p1 = 0; p1 < nParticulas; p1++) {
 					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;

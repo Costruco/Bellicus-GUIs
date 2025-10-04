@@ -6,7 +6,7 @@
 
 # 2. Qual o tipo do projeto? É um jogo? Qual tipo de jogo?
 
-## É um jogo com uma mecânica "shooting and run" de tanques, com visão top-down.
+## É um jogo com uma mecânica "bullet hell" de tanques, com visão top-down.
 
 # 3. Descreva o projeto em um parágrafo:
 
