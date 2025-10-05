@@ -84,11 +84,11 @@ void renderizarProjetil(SDL_Renderer * ren, SDL_Texture * textura, projetil bl1,
 	SDL_FRect base;
 	
 	if (bl1.tipo == 0) {
-		recorte = {9*bl1.variacao,0,9,3};
-		base = {(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1.5-local.y)*escala+ctela.y,9*escala,3*escala};
+		recorte = (SDL_Rect){9*bl1.variacao,0,9,3};
+		base = (SDL_FRect){(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1.5-local.y)*escala+ctela.y,9*escala,3*escala};
 	} else {
-		recorte = {50*bl1.variacao,0,50,1};
-		base = {(bl1.local.x-25-local.x)*escala+ctela.x,(bl1.local.y-0.5-local.y)*escala+ctela.y,50*escala,1*escala};
+		recorte = (SDL_Rect){50*bl1.variacao,0,50,1};
+		base = (SDL_FRect){(bl1.local.x-25-local.x)*escala+ctela.x,(bl1.local.y-0.5-local.y)*escala+ctela.y,50*escala,1*escala};
 	}
 	
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,bl1.angulo,NULL,SDL_FLIP_NONE);
@@ -379,7 +379,7 @@ int main(int argc, char* args[]) {
 										 240,
 										 3};
 					marcos[nParticulas++] = newpart;
-					newpart = {base_ex2,
+					newpart = (particula){base_ex2,
 							   SDL_GetTicks(),
 							   240,
 							   3};
@@ -439,7 +439,7 @@ int main(int argc, char* args[]) {
 												     16,
 												     1};
 								marcos[nParticulas++] = newpart;
-								newpart = {base_cup,
+								newpart = (particula){base_cup,
 										   SDL_GetTicks(),
 										   16,
 										   2};
@@ -555,7 +555,7 @@ int main(int argc, char* args[]) {
 					SDL_FRect base;
 					switch (marcos[p1].tipo) {
 						case 1:
-							base = {base_flash.x,base_flash.y,37*zoom,33*zoom};
+							base = (SDL_FRect){base_flash.x,base_flash.y,37*zoom,33*zoom};
 							SDL_RenderCopyExF(ren,flash1,NULL,&base,angulo_metra,&centro_flash,SDL_FLIP_NONE);
 							break;
 					}
@@ -570,7 +570,7 @@ int main(int argc, char* args[]) {
 					SDL_FRect base;
 					switch (marcos[p1].tipo) {
 						case 2:
-							base = {base_cup.x,base_cup.y,11*zoom,12*zoom};
+							base = (SDL_FRect){base_cup.x,base_cup.y,11*zoom,12*zoom};
 							SDL_RenderCopyExF(ren,flash2,NULL,&base,angulo,&centro_cupola,SDL_FLIP_NONE);
 							break;
 					}
@@ -645,15 +645,15 @@ int main(int argc, char* args[]) {
 									continue;
 								batalhao[s1].vida = 0;
 							}
-							recorte = {100*(int)((tempo_vivo%200)/40),100*(int)(tempo_vivo/200),100,100};
-							base = {(marcos[p1].local.x-local.x-100)*zoom+MWIDTH,(marcos[p1].local.y-local.y-100)*zoom+MHEIGHT,200*zoom,200*zoom};
+							recorte = (SDL_Rect){100*(int)((tempo_vivo%200)/40),100*(int)(tempo_vivo/200),100,100};
+							base = (SDL_FRect){(marcos[p1].local.x-local.x-100)*zoom+MWIDTH,(marcos[p1].local.y-local.y-100)*zoom+MHEIGHT,200*zoom,200*zoom};
 							SDL_RenderCopyExF(ren,explosao,&recorte,&base,0,NULL,SDL_FLIP_NONE);
 							break;
 						case 3:
 							int estagio = (int)(tempo_vivo/60);
 							SDL_FPoint vento = mover(1,angulo+180);
-							recorte = {15*estagio,0,15,15};
-							base = {marcos[p1].local.x-local.x+vento.x*tempo_vivo/12,marcos[p1].local.y-local.y+vento.y*tempo_vivo/12,15*zoom,15*zoom};
+							recorte = (SDL_Rect){15*estagio,0,15,15};
+							base = (SDL_FRect){marcos[p1].local.x-local.x+vento.x*tempo_vivo/12,marcos[p1].local.y-local.y+vento.y*tempo_vivo/12,15*zoom,15*zoom};
 							SDL_RenderCopyExF(ren,fumaca,&recorte,&base,rand()%360,NULL,SDL_FLIP_NONE);
 							break;
 					}
