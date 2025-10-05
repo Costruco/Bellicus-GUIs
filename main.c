@@ -83,13 +83,17 @@ void renderizarProjetil(SDL_Renderer * ren, SDL_Texture * textura, projetil bl1,
 	SDL_Rect recorte;
 	SDL_FRect base;
 	
-	if (bl1.tipo == 0) {
+	if (bl1.tipo == 0 ){
 		recorte = (SDL_Rect){9*bl1.variacao,0,9,3};
 		base = (SDL_FRect){(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1.5-local.y)*escala+ctela.y,9*escala,3*escala};
-	} else {
+	} else if(bl1.tipo==1){
 		recorte = (SDL_Rect){50*bl1.variacao,0,50,1};
 		base = (SDL_FRect){(bl1.local.x-25-local.x)*escala+ctela.x,(bl1.local.y-0.5-local.y)*escala+ctela.y,50*escala,1*escala};
 	}
+    else{
+            recorte = (SDL_Rect){0,0,4,4};
+		    base = (SDL_FRect){(bl1.local.x-2-local.x)*escala+ctela.x,(bl1.local.y-2-local.y)*escala+ctela.y,4*escala,4*escala};    
+    }
 	
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,bl1.angulo,NULL,SDL_FLIP_NONE);
 }
@@ -198,7 +202,8 @@ int main(int argc, char* args[]) {
                     * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png"),
 					* flash1 = IMG_LoadTexture(ren, "./sprites/flash1.png"),
 					* flash2 = IMG_LoadTexture(ren, "./sprites/flash2.png"),
-					* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png");
+					* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
+                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png");
 		
 		//angulos e posições das lagartas
 		double angulo = 0, 
@@ -243,12 +248,14 @@ int main(int argc, char* args[]) {
 		particula marcos[300];
 		soldado batalhao[100];
 		projetil hell[100],
-				 bullet[100];
+				 bullet[100],
+                 bala[100];
 		int nObstaculos = 0,
 			nParticulas = 0,
 			nSoldados = 0,
 			nBalas = 0,
 			nBalasMetra = 0,
+            nBalasSoldado=0,
             nSangue=0;
 		
 		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
@@ -273,6 +280,7 @@ int main(int argc, char* args[]) {
 			esperaPorFumaca = 25,
 			ultimoDisparo = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
 			ultimoDisparoMetra = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
+            ultimoDisparoSoldado = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
 			ultimoSpawn = SDL_GetTicks(),
 			ultimaFumaca = SDL_GetTicks();
 			
@@ -428,7 +436,7 @@ int main(int argc, char* args[]) {
 							projetil newtiro = {ponta_da_metra,
 												3000,
 												0,
-												angulo_metra-5+rand()%6,
+												angulo_metra-5+rand()%11,
 												2000,
 												1,
 												0};
@@ -449,7 +457,17 @@ int main(int argc, char* args[]) {
 						}
 					}
 				}
+                //tiros soldados
+                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA){
+                for (int s = 0; s < nSoldados; s++) {
+                    double anguloBalaSoldado = anguloEntrePontos(local,batalhao[s].local);
+                    if(distanciaEntrePontos(batalhao[s].local,local)<400 && batalhao[s].folga_de_fuga<=0){
+                        projetil balanova={	batalhao[s].local,distanciaEntrePontos(batalhao[s].local,local),0,anguloBalaSoldado-8+rand()%17,200,2,0};
+                        bala[nBalasSoldado++]=balanova;
+                        ultimoDisparoSoldado = SDL_GetTicks();
+                    }
 
+                }}
 				//grade chao
 				int m;
 				for (m = 0; m < MWIDTH/zoom; m++) {
@@ -616,6 +634,19 @@ int main(int argc, char* args[]) {
 					}
 				}
 				
+                int b3;
+                for(b3 = 0; b3 < nBalasSoldado; b3++){
+					atualizarPosicaoProjetil(&bala[b3]);
+					renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
+					int bala_fora = (bala[b3].distanciaAlvo < 0);
+					
+					
+					if(bala_fora && bala[b3].tipo == 2){
+						bala[b3] = bala[--nBalasSoldado];
+        				b3--;
+					}
+					
+				}
 				//laser desejado/laser real
 				lineRGBA(ren,centro_torre_absoluto.x,centro_torre_absoluto.y,
 				 		 mira_real.x-16*cos(radianos(angulo_arma)),
