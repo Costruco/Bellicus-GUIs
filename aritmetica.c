@@ -8,7 +8,7 @@
 int numeroDentroIntervalo(int n, int a, int b) {
 	return (n >= a && n <= b)?1:0;
 }
-
+						
 double graus(double radianos) {
 	return radianos*180/M_PI;
 }
