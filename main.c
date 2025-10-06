@@ -39,6 +39,7 @@ typedef struct particula {
 	int nascimento;
 	int tempo_de_vida;
 	int tipo;
+	int var;
 } particula;
 
 typedef struct soldado {
@@ -270,7 +271,7 @@ int main(int argc, char* args[]) {
 		int gamerunning = 1,
 			mx=0,my=0,
 			esperaPorInimigo = 2000,
-			esperaPorFumaca = 25,
+			esperaPorFumaca = 7,
 			ultimoDisparo = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
 			ultimoDisparoMetra = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
 			ultimoSpawn = SDL_GetTicks(),
@@ -362,29 +363,28 @@ int main(int argc, char* args[]) {
 				SDL_RenderClear(ren);
 				
 				//particula dos exaustores
-				SDL_FPoint centro_ex1_relativo = somar(local,rotacionar(zero,escalonar(exaustor1_offset,zoom),angulo));
-				SDL_FPoint centro_ex1_absoluto = somar(centro_ex1_relativo,centro_tanque);
-				SDL_FPoint base_ex1 = somar(escalonar((SDL_FPoint){-7,-7},zoom),centro_ex1_absoluto);
-				SDL_FPoint centro_ex1 = escalonar((SDL_FPoint){7,7},zoom);
+				SDL_FPoint centro_ex1_relativo = rotacionar(zero,exaustor1_offset,angulo);
+				SDL_FPoint centro_ex1_absoluto = somar(centro_ex1_relativo,local);
 				
-				SDL_FPoint centro_ex2_relativo = somar(local,rotacionar(zero,escalonar(exaustor2_offset,zoom),angulo));
-				SDL_FPoint centro_ex2_absoluto = somar(centro_ex2_relativo,centro_tanque);
-				SDL_FPoint base_ex2 = somar(escalonar((SDL_FPoint){-7,-7},zoom),centro_ex2_absoluto);
-				SDL_FPoint centro_ex2 = escalonar((SDL_FPoint){7,7},zoom);
+				SDL_FPoint centro_ex2_relativo = rotacionar(zero,exaustor2_offset,angulo);
+				SDL_FPoint centro_ex2_absoluto = somar(centro_ex2_relativo,local);
+				
+				SDL_FPoint centro_exaustores = escalonar((SDL_FPoint){12.5,12.5},zoom);
 				
 				if (SDL_GetTicks()-ultimaFumaca > esperaPorFumaca && nParticulas < 299) {
 					ultimaFumaca = SDL_GetTicks();
-					particula newpart = {base_ex1,
+					particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){-5+rand()%6,-5+rand()%6}),
 										 SDL_GetTicks(),
-										 240,
-										 3};
+										 200,
+										 3,
+										 0};
 					marcos[nParticulas++] = newpart;
-					newpart = {base_ex2,
+					newpart = {somar(centro_ex2_absoluto,(SDL_FPoint){-5+rand()%6,-5+rand()%6}),
 							   SDL_GetTicks(),
-							   240,
-							   3};
-					marcos[nParticulas++] = newpart;
-										 
+							   200,
+							   3,
+							   0};
+					marcos[nParticulas++] = newpart;		 
 				}
 
 				//centro da torre
@@ -437,12 +437,14 @@ int main(int argc, char* args[]) {
 								particula newpart = {base_flash,
 												     SDL_GetTicks(),
 												     16,
-												     1};
+												     1,
+													 0};
 								marcos[nParticulas++] = newpart;
 								newpart = {base_cup,
 										   SDL_GetTicks(),
 										   16,
-										   2};
+										   2,
+										   0};
 								marcos[nParticulas++] = newpart;
 							}
 							break;
@@ -584,6 +586,7 @@ int main(int argc, char* args[]) {
 							particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},
 												 SDL_GetTicks(),
 												 1000,
+												 0,
 												 0};
 							marcos[nParticulas++] = newpart;
 						}
@@ -595,7 +598,8 @@ int main(int argc, char* args[]) {
 						continue;
 					}
 					atualizarPosicaoProjetil(&hell[b1]);
-					if (hell[b1].tipo == 0) renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
+					if (hell[b1].tipo == 0) 
+						renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
 
 				}
 				int b2, s;
@@ -650,11 +654,14 @@ int main(int argc, char* args[]) {
 							SDL_RenderCopyExF(ren,explosao,&recorte,&base,0,NULL,SDL_FLIP_NONE);
 							break;
 						case 3:
-							int estagio = (int)(tempo_vivo/60);
-							SDL_FPoint vento = mover(1,angulo+180);
-							recorte = {15*estagio,0,15,15};
-							base = {marcos[p1].local.x-local.x+vento.x*tempo_vivo/12,marcos[p1].local.y-local.y+vento.y*tempo_vivo/12,15*zoom,15*zoom};
-							SDL_RenderCopyExF(ren,fumaca,&recorte,&base,rand()%360,NULL,SDL_FLIP_NONE);
+							int estagio = (int)(tempo_vivo/25);
+							SDL_FPoint vento = mover(1.5,angulo+180);
+							recorte = {50*estagio,0,50,50};
+							base = {(marcos[p1].local.x-local.x-12.5)*zoom+MWIDTH+zoom*vento.x*(int)(tempo_vivo/10),
+									(marcos[p1].local.y-local.y-12.5)*zoom+MHEIGHT+zoom*vento.y*(int)(tempo_vivo/10),
+									25*zoom,
+									25*zoom};
+							SDL_RenderCopyExF(ren,fumaca,&recorte,&base,rand()%360,&centro_exaustores,SDL_FLIP_NONE);
 							break;
 					}
 				}
