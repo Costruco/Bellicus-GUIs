@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "aritmetica.h"
-#include <SDL2_gfxPrimitives.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 
 int numeroDentroIntervalo(int n, int a, int b) {
 	return (n >= a && n <= b)?1:0;
