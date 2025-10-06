@@ -9,6 +9,7 @@
 
 #include "aritmetica.h"
 #include "espera.h"
+#include "interface.h"
 #include "menu.h"
 
 #define FPS 120
@@ -131,8 +132,7 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 
 int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue) {
 	if (batalhao[i].vida == 0) {
-		batalhao[i] = batalhao[(*nSoldados)-1];
-		(*nSoldados)--;
+		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
 	}
 	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
@@ -144,19 +144,17 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
 	sangue[((*nSangue)++)%100] = newsangue;
     
-	batalhao[i] = batalhao[(*nSoldados)-1];
-	(*nSoldados)--;
+	batalhao[i] = batalhao[--(*nSoldados)];
 	return 1;
 }
 
 int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
-	if(distanciaEntrePontos(batalhao[i].local, bullet.local) < 16){
+	if (distanciaEntrePontos(batalhao[i].local, bullet.local) < 16){
 		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x, batalhao[i].local.y}, angulo+180,0};
 
 		sangue[((*nSangue)++)%100] = newsangue;
 
-		batalhao[i] = batalhao[(*nSoldados)-1];
-		(*nSoldados)--;
+		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
 	}
 	return 0;
@@ -381,13 +379,15 @@ int main(int argc, char* args[]) {
 				
 				if (SDL_GetTicks()-ultimaFumaca > esperaPorFumaca && nParticulas < 299) {
 					ultimaFumaca = SDL_GetTicks();
-					particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){-5+rand()%6,-5+rand()%6}),
+					SDL_FPoint vento = mover(rand()%13,angulo+180-10+rand()%21);
+					particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){vento.x,vento.y}),
 										 SDL_GetTicks(),
 										 200,
 										 3,
 										 0};
 					marcos[nParticulas++] = newpart;
-					newpart = {somar(centro_ex2_absoluto,(SDL_FPoint){-5+rand()%6,-5+rand()%6}),
+					vento = (SDL_FPoint) mover(rand()%13,angulo+180-10+rand()%21);
+					newpart = {somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
 							   SDL_GetTicks(),
 							   200,
 							   3,
@@ -430,7 +430,9 @@ int main(int argc, char* args[]) {
 					
 					for (int s = 0; s < nSoldados; s++) {
 						double anguloDeDisparo = anguloEntrePontos(batalhao[s].local,ponta_da_metra);
-						if (numeroDentroIntervalo(anguloDeDisparo,angulo-45,angulo+45) && distanciaEntrePontos(batalhao[s].local,ponta_da_metra) < 1000) {
+						int noCampoDeVisao = anguloDentroIntervalo(anguloDeDisparo,angulo-45,angulo+45),
+							noAlcance = distanciaEntrePontos(batalhao[s].local,ponta_da_metra) < distanciaEntrePontos(zero,(SDL_FPoint){MWIDTH+50,MHEIGHT+50});
+						if (noCampoDeVisao && noAlcance) {
 							ultimoDisparoMetra = SDL_GetTicks();
 							angulo_metra = anguloDeDisparo;
 							projetil newtiro = {ponta_da_metra,
@@ -448,28 +450,39 @@ int main(int argc, char* args[]) {
 												     1,
 													 0};
 								marcos[nParticulas++] = newpart;
-								newpart = (particula){base_cup,
-										   SDL_GetTicks(),
-										   16,
-										   2,
-										   0};
+								newpart = (particula) {base_cup,
+													   SDL_GetTicks(),
+													   16,
+													   2,
+													   0};
 								marcos[nParticulas++] = newpart;
 							}
 							break;
 						}
 					}
 				}
+				
                 //tiros soldados
-                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA){
-                for (int s = 0; s < nSoldados; s++) {
-                    double anguloBalaSoldado = anguloEntrePontos(local,batalhao[s].local);
-                    if(distanciaEntrePontos(batalhao[s].local,local)<400 && batalhao[s].folga_de_fuga<=0){
-                        projetil balanova={	batalhao[s].local,distanciaEntrePontos(batalhao[s].local,local),0,anguloBalaSoldado-8+rand()%17,200,2,0};
-                        bala[nBalasSoldado++]=balanova;
-                        ultimoDisparoSoldado = SDL_GetTicks();
-                    }
-
-                }}
+                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
+                	ultimoDisparoSoldado = SDL_GetTicks();
+	                for (int s = 0; s < nSoldados; s++) {
+	                	if (nBalasSoldado < 100) {
+		                    double anguloBalaSoldado = anguloEntrePontos(local,batalhao[s].local);
+		                    if(distanciaEntrePontos(batalhao[s].local,local) < 400 && batalhao[s].folga_de_fuga <= 0) {
+		                        projetil balanova = {batalhao[s].local,
+													 distanciaEntrePontos(batalhao[s].local,local),
+													 0,
+													 anguloBalaSoldado-8+rand()%17,
+													 200,
+													 2,
+													 0};
+		                        bala[nBalasSoldado++] = balanova;
+		                    }
+		            	} else 
+		            		break;
+					}
+            	}
+            	
 				//grade chao
 				int m;
 				for (m = 0; m < MWIDTH/zoom; m++) {
@@ -500,6 +513,7 @@ int main(int argc, char* args[]) {
 					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
 					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
 				}
+				
                 //sangue
                 for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
 					SDL_Rect recorte = {0,0,60,50};
@@ -543,20 +557,24 @@ int main(int argc, char* args[]) {
 					}
 				}
 				for (s1 = 0; s1 < nSoldados; s1++) {
-					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue))
+					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue)) {
+						circleRGBA(ren,MWIDTH+300,MHEIGHT,5,0,0,255,255);
 						continue;
+					}
 					atualizarPosicaoSoldado(&batalhao[s1],local);
+					circleRGBA(ren,MWIDTH+200,MHEIGHT,5,255,0,0,255);
 					for (s2 = s1+1; s2 < nSoldados; s2++) {
 						corrigirColisao(&batalhao[s1],&batalhao[s2]);
 					}
-                    
 					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
+					circleRGBA(ren,MWIDTH+250,MHEIGHT,5,255,255,0,255);
 				}
+				circleRGBA(ren,MWIDTH+300,MHEIGHT,5,0,255,0,255);
                 
 				//chassi do tanque
 				SDL_Texture * chassi;
 				if (zoom >= 0.2)
-					chassi = chassiHD;
+					chassi = chassiHD; //eu sou o eraldo dou muito a bunda 
 				else 
 					chassi = chassiLQ;
 				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
@@ -569,8 +587,9 @@ int main(int argc, char* args[]) {
 				//flash da metralhadora
 				for (int p1 = 0; p1 < nParticulas; p1++) {
 					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
-					if (marcos[p1].tempo_de_vida < tempo_vivo) {
-						marcos[p1] = marcos[nParticulas---1];
+					if (marcos[p1].tempo_de_vida <= tempo_vivo) {
+						marcos[p1] = marcos[--nParticulas];
+						p1--;
 					}
 					SDL_FRect base;
 					switch (marcos[p1].tipo) {
@@ -587,6 +606,11 @@ int main(int argc, char* args[]) {
 				
 				//flash da cupola
 				for (int p1 = 0; p1 < nParticulas; p1++) {
+					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
+					if (marcos[p1].tempo_de_vida < tempo_vivo) {
+						marcos[p1] = marcos[--nParticulas];
+						p1--;
+					}
 					SDL_FRect base;
 					switch (marcos[p1].tipo) {
 						case 2:
@@ -599,7 +623,9 @@ int main(int argc, char* args[]) {
 				//atualização de projeteis
 				int b1;
 				for (b1 = 0; b1 < nBalas; b1++) {
-					if (hell[b1].distanciaAlvo <= 0 && hell[b1].tipo == 0) {
+					atualizarPosicaoProjetil(&hell[b1]);
+					renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
+					if (hell[b1].distanciaAlvo <= 0) {
 						if (nParticulas < 300) {
 							particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},
 												 SDL_GetTicks(),
@@ -612,19 +638,15 @@ int main(int argc, char* args[]) {
 						terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
 						obstaculos[(nObstaculos++)%100] = newobs;
 						
-						hell[b1] = hell[nBalas---1];
-						continue;
+						hell[b1] = hell[--nBalas];
+						b1--;
 					}
-					atualizarPosicaoProjetil(&hell[b1]);
-					if (hell[b1].tipo == 0) 
-						renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
-
 				}
 				int b2, s;
 				for(b2 = 0; b2 < nBalasMetra; b2++){
 					atualizarPosicaoProjetil(&bullet[b2]);
 					renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom);
-					int bala_fora = (bullet[b2].distanciaAlvo < 0),
+					int bala_fora = (bullet[b2].distanciaAlvo <= 0),
 						matou = 0;
 					for(s = 0; s < nSoldados; s++){
 						if((colisaoBala(batalhao, sangue, s, bullet[b2], angulo_metra, &nSoldados, &nSangue))){
@@ -640,16 +662,13 @@ int main(int argc, char* args[]) {
 				
                 int b3;
                 for(b3 = 0; b3 < nBalasSoldado; b3++){
-					atualizarPosicaoProjetil(&bala[b3]);
-					renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
-					int bala_fora = (bala[b3].distanciaAlvo < 0);
-					
-					
+                	atualizarPosicaoProjetil(&bala[b3]);
+                	renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
+                	int bala_fora = (bala[b3].distanciaAlvo <= 0);
 					if(bala_fora && bala[b3].tipo == 2){
 						bala[b3] = bala[--nBalasSoldado];
         				b3--;
 					}
-					
 				}
 				//laser desejado/laser real
 				lineRGBA(ren,centro_torre_absoluto.x,centro_torre_absoluto.y,
@@ -669,6 +688,10 @@ int main(int argc, char* args[]) {
 				//atualização de particulas
 				for (int p1 = 0; p1 < nParticulas; p1++) {
 					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
+					if (marcos[p1].tempo_de_vida <= tempo_vivo) {
+						marcos[p1] = marcos[--nParticulas];
+						p1--;
+					}
 					SDL_Rect recorte;
 					SDL_FRect base;
 					switch (marcos[p1].tipo) {
@@ -705,6 +728,13 @@ int main(int argc, char* args[]) {
 				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
                 
 				//painel de controle do chassi
+				infoBox(ren,500,0,200,60);
+				infoLabel(ren,500,0,"N Soldados: %4.1lf",nSoldados);
+				infoLabel(ren,500,11,"N Particulas: %4.1lf",nParticulas);
+				infoLabel(ren,500,22,"N BalasMetra: %4.1lf",nBalasMetra);
+				infoLabel(ren,500,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
+				infoLabel(ren,500,44,"N Sangue: %4.1lf",nSangue);
+				
 				sprintf(x, "x: %4.1lf", local.x);
 				sprintf(y, "y: %4.1lf", -local.y);
 				sprintf(grau, "Angulo: %3.2lf", angulo);

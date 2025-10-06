@@ -7,7 +7,8 @@
 #define MIN(a,b) (a<b)?a:b
 #define MOD(a) (a>=0)?a:-a
 
-int numeroDentroIntervalo(int n, int a, int b);
+int numeroDentroIntervalo(double n, double a, double b);
+int anguloDentroIntervalo(double n, double a, double b);
 double graus(double radianos);
 double radianos(double angulo);
 double limitarDouble(double n, double limite);
