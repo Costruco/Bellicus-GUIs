@@ -274,6 +274,7 @@ int main(int argc, char* args[]) {
 		
 		enum Movimento estado = PONTO_MORTO;
 		int gamerunning = 1,
+			debug = 0,
 			mx=0,my=0,
 			esperaPorInimigo = 2000,
 			esperaPorFumaca = 7,
@@ -336,6 +337,12 @@ int main(int argc, char* args[]) {
 						zoom += 0.05;
 					} else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1) {
 						zoom -= 0.05;
+					}
+					if (tecP[SDL_SCANCODE_F3]) {
+						if (debug == 0)
+							debug = 1;
+						else
+							debug = 0;
 					}
 					break;
 				case SDL_QUIT:
@@ -485,13 +492,13 @@ int main(int argc, char* args[]) {
             	
 				//grade chao
 				int m;
-				for (m = 0; m < MWIDTH/zoom; m++) {
-					if ((int)limitarDouble(m+local.x,100)==0)
-						lineRGBA(ren,m*zoom+local.x,-100,m*zoom+local.x,HEIGHT+100,0,50,0,255);
+				for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
+					if ((int)limitarDouble(m+local.x+MWIDTH,100)==0)
+						lineRGBA(ren,m*zoom+MWIDTH,-100,m*zoom+MWIDTH,HEIGHT+100,0,50,0,255);
 				}
 				for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
-					if ((int)limitarDouble(m+local.y,100)==0)
-						lineRGBA(ren,-100,m*zoom+local.y,WIDTH+100,m*zoom+local.y,0,50,0,255);
+					if ((int)limitarDouble(m+local.y+HEIGHT,100)==0)
+						lineRGBA(ren,-100,m*zoom+MHEIGHT,WIDTH+100,m*zoom+MHEIGHT,0,50,0,255);
 				}
 				
 				//encontra o angulo da mira
@@ -558,18 +565,14 @@ int main(int argc, char* args[]) {
 				}
 				for (s1 = 0; s1 < nSoldados; s1++) {
 					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue)) {
-						circleRGBA(ren,MWIDTH+300,MHEIGHT,5,0,0,255,255);
 						continue;
 					}
 					atualizarPosicaoSoldado(&batalhao[s1],local);
-					circleRGBA(ren,MWIDTH+200,MHEIGHT,5,255,0,0,255);
 					for (s2 = s1+1; s2 < nSoldados; s2++) {
 						corrigirColisao(&batalhao[s1],&batalhao[s2]);
 					}
 					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
-					circleRGBA(ren,MWIDTH+250,MHEIGHT,5,255,255,0,255);
 				}
-				circleRGBA(ren,MWIDTH+300,MHEIGHT,5,0,255,0,255);
                 
 				//chassi do tanque
 				SDL_Texture * chassi;
@@ -727,14 +730,17 @@ int main(int argc, char* args[]) {
 				SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
 				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
                 
-				//painel de controle do chassi
-				infoBox(ren,500,0,200,60);
-				infoLabel(ren,500,0,"N Soldados: %4.1lf",nSoldados);
-				infoLabel(ren,500,11,"N Particulas: %4.1lf",nParticulas);
-				infoLabel(ren,500,22,"N BalasMetra: %4.1lf",nBalasMetra);
-				infoLabel(ren,500,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
-				infoLabel(ren,500,44,"N Sangue: %4.1lf",nSangue);
+				//DEBUG
+				if (debug) {
+					infoBox(ren,170,0,200,57);
+					infoLabel(ren,170,0,"N Soldados: %4.1lf",nSoldados);
+					infoLabel(ren,170,11,"N Particulas: %4.1lf",nParticulas);
+					infoLabel(ren,170,22,"N BalasMetra: %4.1lf",nBalasMetra);
+					infoLabel(ren,170,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
+					infoLabel(ren,170,44,"N Sangue: %4.1lf",nSangue);
+				}
 				
+				//painel de controle do chassi
 				sprintf(x, "x: %4.1lf", local.x);
 				sprintf(y, "y: %4.1lf", -local.y);
 				sprintf(grau, "Angulo: %3.2lf", angulo);
