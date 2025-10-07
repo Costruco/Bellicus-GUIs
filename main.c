@@ -387,7 +387,7 @@ int main(int argc, char* args[]) {
 										 0};
 					marcos[nParticulas++] = newpart;
 					vento = (SDL_FPoint) mover(rand()%13,angulo+180-10+rand()%21);
-					newpart = {somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
+					newpart = (particula){somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
 							   SDL_GetTicks(),
 							   200,
 							   3,
@@ -710,8 +710,8 @@ int main(int argc, char* args[]) {
 						case 3:
 							int estagio = (int)(tempo_vivo/25);
 							SDL_FPoint vento = mover(1.5,angulo+180);
-							recorte = {50*estagio,0,50,50};
-							base = {(marcos[p1].local.x-local.x-12.5)*zoom+MWIDTH+zoom*vento.x*(int)(tempo_vivo/10),
+							recorte = (SDL_Rect){50*estagio,0,50,50};
+							base = (SDL_FRect){(marcos[p1].local.x-local.x-12.5)*zoom+MWIDTH+zoom*vento.x*(int)(tempo_vivo/10),
 									(marcos[p1].local.y-local.y-12.5)*zoom+MHEIGHT+zoom*vento.y*(int)(tempo_vivo/10),
 									25*zoom,
 									25*zoom};
