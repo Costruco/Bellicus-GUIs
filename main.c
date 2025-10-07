@@ -180,677 +180,685 @@ int main(int argc, char* args[]) {
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_ShowCursor(SDL_DISABLE);
 	srand(SDL_GetTicks());
-	MenuOption escolha = menu_loop(ren, win);
-
-	//MENU DO JOGO
-	if(escolha == MENU_PLAY){
-		//sprites
-		SDL_Texture * chassiHD = IMG_LoadTexture(ren, "./sprites/chassi_com_sombra.png"),
-					* chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
-				    * torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
-					* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
-					* cupola = IMG_LoadTexture(ren, "./sprites/cupola_metralhadora_chassi.png"),
-					* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png"),
-					* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
-					* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
-                    * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
-					* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
-					* municao_metralhadora = IMG_LoadTexture(ren, "./sprites/municao_metralhadora.png"),
-					* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
-					* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
-                    * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png"),
-					* flash1 = IMG_LoadTexture(ren, "./sprites/flash1.png"),
-					* flash2 = IMG_LoadTexture(ren, "./sprites/flash2.png"),
-					* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
-                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png");
-		
-		//angulos e posições das lagartas
-		double angulo = 0, 
-			   angulo_arma = 0,
-			   angulo_metra = 0, 
-			   angulo_alvo = 0;
+	int apprunning = 1;
+	
+	while (!SDL_QuitRequested() && apprunning) {
+		MenuOption escolha = menu_loop(ren, win);
+		//MENU DO JOGO
+		if(escolha == MENU_PLAY){
+			//sprites
+			SDL_Texture * chassiHD = IMG_LoadTexture(ren, "./sprites/chassi_com_sombra.png"),
+						* chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
+					    * torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
+						* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
+						* cupola = IMG_LoadTexture(ren, "./sprites/cupola_metralhadora_chassi.png"),
+						* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png"),
+						* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
+						* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
+	                    * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
+						* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
+						* municao_metralhadora = IMG_LoadTexture(ren, "./sprites/municao_metralhadora.png"),
+						* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
+						* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
+	                    * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png"),
+						* flash1 = IMG_LoadTexture(ren, "./sprites/flash1.png"),
+						* flash2 = IMG_LoadTexture(ren, "./sprites/flash2.png"),
+						* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
+	                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png");
 			
-		//valores do jogo
-		int WIDTH, 
-			HEIGHT;
-		SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
-		int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
-		
-		//valores do veiculo
-		int VELOCIDADE_TRANS_MAXIMA = 441,
-			VELOCIDADE_REV_MAXIMA = 88,
-			ACELERACAO_TRANS = 5,
-			ACELERACAO_REV = 3.5,
-			DESACELERACAO = 2.5;
-		double velocidade = 0,
-			   VELOCIDADE_ANGULAR = 0.45,
-			   VELOCIDADE_TORRE = 0.25,
-			   TEMPO_DE_RECARGA = 1000,
-			   TEMPO_DE_RECARGA_METRA = 100,
-			   VELOCIDADE_DE_RECARGA = 1,
-			   VELOCIDADE_DE_RECARGA_METRA = 1,
-			   zoom = 0.9;	
+			//angulos e posições das lagartas
+			double angulo = 0, 
+				   angulo_arma = 0,
+				   angulo_metra = 0, 
+				   angulo_alvo = 0;
+				
+			//valores do jogo
+			int WIDTH, 
+				HEIGHT;
+			SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
+			int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 			
-		SDL_FPoint torre_offset = {19,0},
-				   metra_offset = {65,17},
-				   cupola_offset = {62,17},
-				   exaustor1_offset = {-93,-15},
-				   exaustor2_offset = {-93,+15},
-				   centro_tanque = {MWIDTH,MHEIGHT},
-				   zero = {0,0},
-				   centro_torre_absoluto = somar(centro_tanque,torre_offset),
-				   centro_torre_relativo = torre_offset,
-				   mira_real,
-				   local = {0,0};
-		terreno sangue[100];		  		
-		terreno obstaculos[100];
-		particula marcos[300];
-		soldado batalhao[100];
-		projetil hell[100],
-				 bullet[100],
-                 bala[100];
-		int nObstaculos = 0,
-			nParticulas = 0,
-			nSoldados = 0,
-			nBalas = 0,
-			nBalasMetra = 0,
-            nBalasSoldado=0,
-            nSangue=0;
-		
-		const Uint8 * tecP = SDL_GetKeyboardState(NULL);
+			//valores do veiculo
+			int VELOCIDADE_TRANS_MAXIMA = 441,
+				VELOCIDADE_REV_MAXIMA = 88,
+				ACELERACAO_TRANS = 5,
+				ACELERACAO_REV = 3.5,
+				DESACELERACAO = 2.5;
+			double velocidade = 0,
+				   VELOCIDADE_ANGULAR = 0.45,
+				   VELOCIDADE_TORRE = 0.25,
+				   TEMPO_DE_RECARGA = 1000,
+				   TEMPO_DE_RECARGA_METRA = 100,
+				   VELOCIDADE_DE_RECARGA = 1,
+				   VELOCIDADE_DE_RECARGA_METRA = 1,
+				   zoom = 0.9;	
+				
+			SDL_FPoint torre_offset = {19,0},
+					   metra_offset = {65,17},
+					   cupola_offset = {62,17},
+					   exaustor1_offset = {-93,-15},
+					   exaustor2_offset = {-93,+15},
+					   centro_tanque = {MWIDTH,MHEIGHT},
+					   zero = {0,0},
+					   centro_torre_absoluto = somar(centro_tanque,torre_offset),
+					   centro_torre_relativo = torre_offset,
+					   mira_real,
+					   local = {0,0};
+			terreno sangue[100];		  		
+			terreno obstaculos[100];
+			particula marcos[300];
+			soldado batalhao[100];
+			projetil hell[100],
+					 bullet[100],
+	                 bala[100];
+			int nObstaculos = 0,
+				nParticulas = 0,
+				nSoldados = 0,
+				nBalas = 0,
+				nBalasMetra = 0,
+	            nBalasSoldado=0,
+	            nSangue=0;
 			
-		//informações dos paineis
-		char x[30],
-			 y[30],
-			 grau[30],
-			 velocimetro[30],
-			 numero[30],
-			 state[30],
-			 angulotorre[30],
-			 anguloalvo[30];
+			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
+				
+			//informações dos paineis
+			char x[30],
+				 y[30],
+				 grau[30],
+				 velocimetro[30],
+				 numero[30],
+				 state[30],
+				 angulotorre[30],
+				 anguloalvo[30];
+				
+			//estado inicial
+			sprintf(state, "Estado: PONTO_MORTO");
 			
-		//estado inicial
-		sprintf(state, "Estado: PONTO_MORTO");
-		
-		enum Movimento estado = PONTO_MORTO;
-		int gamerunning = 1,
-			debug = 0,
-			mx=0,my=0,
-			esperaPorInimigo = 2000,
-			esperaPorFumaca = 7,
-			ultimoDisparo = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
-			ultimoDisparoMetra = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
-            ultimoDisparoSoldado = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
-			ultimoSpawn = SDL_GetTicks(),
-			ultimaFumaca = SDL_GetTicks();
-			
-		Uint32 espera = TPF;
-		SDL_Event evt;
-		while (gamerunning) {
-			//recebe os inputs e atualiza o estado de movimentação do tanque
-			int isevt = AUX_WaitEventTimeoutCount(&evt, &espera);
-			if (isevt) {
-				switch (evt.type) {	
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
-						if (tecP[SDL_SCANCODE_A]) {
-							estado = ESQ_TRANSV;
-							sprintf(state, "Estado: ESQ_TRANSV");
-						} else if (tecP[SDL_SCANCODE_D]) {
-							estado = DIR_TRANSV;
-							sprintf(state, "Estado: DIR_TRANSV");
-						} else {
-							estado = TRANSV;
-							sprintf(state, "Estado: TRANSV");
-						}
+			enum Movimento estado = PONTO_MORTO;
+			int gamerunning = 1,
+				debug = 0,
+				mx=0,my=0,
+				esperaPorInimigo = 2000,
+				esperaPorFumaca = 7,
+				ultimoDisparo = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
+				ultimoDisparoMetra = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
+	            ultimoDisparoSoldado = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
+				ultimoSpawn = SDL_GetTicks(),
+				ultimaFumaca = SDL_GetTicks();
+				
+			Uint32 espera = TPF;
+			SDL_Event evt;
+			while (gamerunning && apprunning) {
+				//recebe os inputs e atualiza o estado de movimentação do tanque
+				int isevt = AUX_WaitEventTimeoutCount(&evt, &espera);
+				if (isevt) {
+					switch (evt.type) {	
+					case SDL_KEYDOWN:
+					case SDL_KEYUP:
+						if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
+							if (tecP[SDL_SCANCODE_A]) {
+								estado = ESQ_TRANSV;
+								sprintf(state, "Estado: ESQ_TRANSV");
+							} else if (tecP[SDL_SCANCODE_D]) {
+								estado = DIR_TRANSV;
+								sprintf(state, "Estado: DIR_TRANSV");
+							} else {
+								estado = TRANSV;
+								sprintf(state, "Estado: TRANSV");
+							}
+								
+						} else if (tecP[SDL_SCANCODE_S]  && !tecP[SDL_SCANCODE_W]) {
+							if (tecP[SDL_SCANCODE_A]) {
+								estado = ESQ_REV;
+								sprintf(state, "Estado: ESQ_REV");
+							} else if (tecP[SDL_SCANCODE_D]) {
+								estado = DIR_REV;
+								sprintf(state, "Estado: DIR_REV");
+							} else {
+								estado = REV;
+								sprintf(state, "Estado: REV");
+							}
+								
+						} else if (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]) {
+							estado = ESQ;
+							sprintf(state, "Estado: ESQ");
 							
-					} else if (tecP[SDL_SCANCODE_S]  && !tecP[SDL_SCANCODE_W]) {
-						if (tecP[SDL_SCANCODE_A]) {
-							estado = ESQ_REV;
-							sprintf(state, "Estado: ESQ_REV");
-						} else if (tecP[SDL_SCANCODE_D]) {
-							estado = DIR_REV;
-							sprintf(state, "Estado: DIR_REV");
-						} else {
-							estado = REV;
-							sprintf(state, "Estado: REV");
-						}
 							
-					} else if (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]) {
-						estado = ESQ;
-						sprintf(state, "Estado: ESQ");
+						} else if (tecP[SDL_SCANCODE_D] && !tecP[SDL_SCANCODE_A]) {
+							estado = DIR;
+							sprintf(state, "Estado: DIR");
+							
+							
+						} else {
+							estado = PONTO_MORTO;
+							sprintf(state, "Estado: PONTO_MORTO");
+						} 
 						
 						
-					} else if (tecP[SDL_SCANCODE_D] && !tecP[SDL_SCANCODE_A]) {
-						estado = DIR;
-						sprintf(state, "Estado: DIR");
-						
-						
-					} else {
-						estado = PONTO_MORTO;
-						sprintf(state, "Estado: PONTO_MORTO");
-					} 
-					
-					
-					if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0) {
-						zoom += 0.05;
-					} else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1) {
-						zoom -= 0.05;
+						if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0) {
+							zoom += 0.05;
+						} else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1) {
+							zoom -= 0.05;
+						}
+						if (tecP[SDL_SCANCODE_F3]) {
+							if (debug == 0)
+								debug = 1;
+							else
+								debug = 0;
+						}
+						if (tecP[SDL_SCANCODE_ESCAPE]) {
+							gamerunning = 0;
+						}
+						break;
+					case SDL_QUIT:
+						apprunning = 0;
+						break;
+					case SDL_MOUSEMOTION:
+						SDL_GetMouseState(&mx,&my);
+						break;
+					case SDL_MOUSEBUTTONDOWN:
+						//spawn de projeteis
+						if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
+							ultimoDisparo = SDL_GetTicks();
+							SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),mover(100,angulo_arma));
+							projetil newbl = {ponta_do_canhao,
+											  distanciaEntrePontos(ponta_do_canhao,somar(local,escalonar((SDL_FPoint){mira_real.x-MWIDTH,mira_real.y-MHEIGHT},1/zoom))),
+											  0,
+											  angulo_arma,
+											  3000,
+											  0,
+											  1};
+							hell[nBalas++] = newbl;
+						}
+						break;
 					}
-					if (tecP[SDL_SCANCODE_F3]) {
-						if (debug == 0)
-							debug = 1;
-						else
-							debug = 0;
-					}
-					break;
-				case SDL_QUIT:
-					gamerunning = 0;
-					break;
-				case SDL_MOUSEMOTION:
-					SDL_GetMouseState(&mx,&my);
-					break;
-				case SDL_MOUSEBUTTONDOWN:
-					//spawn de projeteis
-					if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
-						ultimoDisparo = SDL_GetTicks();
-						SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),mover(100,angulo_arma));
-						projetil newbl = {ponta_do_canhao,
-										  distanciaEntrePontos(ponta_do_canhao,somar(local,escalonar((SDL_FPoint){mira_real.x-MWIDTH,mira_real.y-MHEIGHT},1/zoom))),
-										  0,
-										  angulo_arma,
-										  3000,
-										  0,
-										  1};
-						hell[nBalas++] = newbl;
-					}
-					break;
 				}
-			}
-			//atualiza o frame
-			if (espera == 0) {
-				espera = TPF;
-				//fundo verde
-				SDL_SetRenderDrawColor(ren,0,100,0,255);
-				SDL_RenderClear(ren);
-				
-				//particula dos exaustores
-				SDL_FPoint centro_ex1_relativo = rotacionar(zero,exaustor1_offset,angulo);
-				SDL_FPoint centro_ex1_absoluto = somar(centro_ex1_relativo,local);
-				
-				SDL_FPoint centro_ex2_relativo = rotacionar(zero,exaustor2_offset,angulo);
-				SDL_FPoint centro_ex2_absoluto = somar(centro_ex2_relativo,local);
-				
-				SDL_FPoint centro_exaustores = escalonar((SDL_FPoint){12.5,12.5},zoom);
-				
-				if (SDL_GetTicks()-ultimaFumaca > esperaPorFumaca && nParticulas < 299) {
-					ultimaFumaca = SDL_GetTicks();
-					SDL_FPoint vento = mover(rand()%13,angulo+180-10+rand()%21);
-					particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){vento.x,vento.y}),
-										 SDL_GetTicks(),
-										 200,
-										 3,
-										 0};
-					marcos[nParticulas++] = newpart;
-					vento = (SDL_FPoint) mover(rand()%13,angulo+180-10+rand()%21);
-					newpart = (particula){somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
-							   SDL_GetTicks(),
-							   200,
-							   3,
-							   0};
-					marcos[nParticulas++] = newpart;		 
-				}
-
-				//centro da torre
-				centro_torre_relativo = rotacionar(zero,escalonar(torre_offset,zoom),angulo);
-				centro_torre_absoluto = somar(centro_torre_relativo,centro_tanque);
-				SDL_FPoint base = somar(escalonar((SDL_FPoint){-37,-34},zoom),centro_torre_absoluto);
-				SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
-				
-				//centro da metralhadora do chassi
-				SDL_FPoint centro_metra_relativo = rotacionar(zero,escalonar(metra_offset,zoom),angulo);
-				SDL_FPoint centro_metra_absoluto = somar(centro_tanque,centro_metra_relativo);
-				SDL_FPoint base_metra = somar(escalonar((SDL_FPoint){-3,-3},zoom),centro_metra_absoluto);
-				SDL_FPoint centro_metra = escalonar((SDL_FPoint){3,3},zoom);
-				
-				//centro da cupola do chassi
-				SDL_FPoint centro_cupola_relativo = rotacionar(zero,escalonar(cupola_offset,zoom),angulo);
-				SDL_FPoint centro_cupola_absoluto = somar(centro_tanque,centro_cupola_relativo);
-				SDL_FPoint base_cup = somar(escalonar((SDL_FPoint){-5,-5},zoom),centro_cupola_absoluto);
-				SDL_FPoint centro_cupola = escalonar((SDL_FPoint){5,5},zoom);
-				
-				//centro do flash da metralhadora 
-				SDL_FPoint centro_flash_relativo = rotacionar(zero,escalonar(metra_offset,zoom),angulo);
-				SDL_FPoint centro_flash_absoluto = somar(centro_tanque,centro_flash_relativo);
-				SDL_FPoint base_flash;
-				SDL_FPoint centro_flash;
-				
-				//metralhadora movel
-				SDL_FPoint ponta_da_metra;
-				if(SDL_GetTicks()-ultimoDisparoMetra >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
-					ponta_da_metra = somar(somar(local, rotacionar(zero, metra_offset, angulo)), mover(14, angulo_metra));
+				//atualiza o frame
+				if (espera == 0) {
+					espera = TPF;
+					//fundo verde
+					SDL_SetRenderDrawColor(ren,0,100,0,255);
+					SDL_RenderClear(ren);
+					
+					//particula dos exaustores
+					SDL_FPoint centro_ex1_relativo = rotacionar(zero,exaustor1_offset,angulo);
+					SDL_FPoint centro_ex1_absoluto = somar(centro_ex1_relativo,local);
+					
+					SDL_FPoint centro_ex2_relativo = rotacionar(zero,exaustor2_offset,angulo);
+					SDL_FPoint centro_ex2_absoluto = somar(centro_ex2_relativo,local);
+					
+					SDL_FPoint centro_exaustores = escalonar((SDL_FPoint){12.5,12.5},zoom);
+					
+					if (SDL_GetTicks()-ultimaFumaca > esperaPorFumaca && nParticulas < 299) {
+						ultimaFumaca = SDL_GetTicks();
+						SDL_FPoint vento = mover(rand()%13,angulo+180-10+rand()%21);
+						particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){vento.x,vento.y}),
+											 SDL_GetTicks(),
+											 200,
+											 3,
+											 0};
+						marcos[nParticulas++] = newpart;
+						vento = (SDL_FPoint) mover(rand()%13,angulo+180-10+rand()%21);
+						newpart = (particula){somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
+								   SDL_GetTicks(),
+								   200,
+								   3,
+								   0};
+						marcos[nParticulas++] = newpart;		 
+					}
+	
+					//centro da torre
+					centro_torre_relativo = rotacionar(zero,escalonar(torre_offset,zoom),angulo);
+					centro_torre_absoluto = somar(centro_torre_relativo,centro_tanque);
+					SDL_FPoint base = somar(escalonar((SDL_FPoint){-37,-34},zoom),centro_torre_absoluto);
+					SDL_FPoint centro_torre = escalonar((SDL_FPoint){37,34},zoom);
+					
+					//centro da metralhadora do chassi
+					SDL_FPoint centro_metra_relativo = rotacionar(zero,escalonar(metra_offset,zoom),angulo);
+					SDL_FPoint centro_metra_absoluto = somar(centro_tanque,centro_metra_relativo);
+					SDL_FPoint base_metra = somar(escalonar((SDL_FPoint){-3,-3},zoom),centro_metra_absoluto);
+					SDL_FPoint centro_metra = escalonar((SDL_FPoint){3,3},zoom);
+					
+					//centro da cupola do chassi
+					SDL_FPoint centro_cupola_relativo = rotacionar(zero,escalonar(cupola_offset,zoom),angulo);
+					SDL_FPoint centro_cupola_absoluto = somar(centro_tanque,centro_cupola_relativo);
+					SDL_FPoint base_cup = somar(escalonar((SDL_FPoint){-5,-5},zoom),centro_cupola_absoluto);
+					SDL_FPoint centro_cupola = escalonar((SDL_FPoint){5,5},zoom);
 					
 					//centro do flash da metralhadora 
-					base_flash = somar(escalonar((SDL_FPoint){-5,-15},zoom),centro_flash_absoluto);
-					centro_flash = escalonar((SDL_FPoint){5,15},zoom);
+					SDL_FPoint centro_flash_relativo = rotacionar(zero,escalonar(metra_offset,zoom),angulo);
+					SDL_FPoint centro_flash_absoluto = somar(centro_tanque,centro_flash_relativo);
+					SDL_FPoint base_flash;
+					SDL_FPoint centro_flash;
 					
-					for (int s = 0; s < nSoldados; s++) {
-						double anguloDeDisparo = anguloEntrePontos(batalhao[s].local,ponta_da_metra);
-						int noCampoDeVisao = anguloDentroIntervalo(anguloDeDisparo,angulo-45,angulo+45),
-							noAlcance = distanciaEntrePontos(batalhao[s].local,ponta_da_metra) < distanciaEntrePontos(zero,(SDL_FPoint){MWIDTH+50,MHEIGHT+50});
-						if (noCampoDeVisao && noAlcance) {
-							ultimoDisparoMetra = SDL_GetTicks();
-							angulo_metra = anguloDeDisparo;
-							projetil newtiro = {ponta_da_metra,
-												3000,
-												0,
-												angulo_metra-5+rand()%11,
-												2000,
-												1,
-												0};
-							bullet[nBalasMetra++] = newtiro;
-							if (nParticulas < 299) {
-								particula newpart = {base_flash,
-												     SDL_GetTicks(),
-												     16,
-												     1,
-													 0};
-								marcos[nParticulas++] = newpart;
-								newpart = (particula) {base_cup,
-													   SDL_GetTicks(),
-													   16,
-													   2,
-													   0};
-								marcos[nParticulas++] = newpart;
+					//metralhadora movel
+					SDL_FPoint ponta_da_metra;
+					if(SDL_GetTicks()-ultimoDisparoMetra >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
+						ponta_da_metra = somar(somar(local, rotacionar(zero, metra_offset, angulo)), mover(14, angulo_metra));
+						
+						//centro do flash da metralhadora 
+						base_flash = somar(escalonar((SDL_FPoint){-5,-15},zoom),centro_flash_absoluto);
+						centro_flash = escalonar((SDL_FPoint){5,15},zoom);
+						
+						for (int s = 0; s < nSoldados; s++) {
+							double anguloDeDisparo = anguloEntrePontos(batalhao[s].local,ponta_da_metra);
+							int noCampoDeVisao = anguloDentroIntervalo(anguloDeDisparo,angulo-45,angulo+45),
+								noAlcance = distanciaEntrePontos(batalhao[s].local,ponta_da_metra) < distanciaEntrePontos(zero,(SDL_FPoint){MWIDTH+50,MHEIGHT+50});
+							if (noCampoDeVisao && noAlcance) {
+								ultimoDisparoMetra = SDL_GetTicks();
+								angulo_metra = anguloDeDisparo;
+								projetil newtiro = {ponta_da_metra,
+													3000,
+													0,
+													angulo_metra-5+rand()%11,
+													2000,
+													1,
+													0};
+								bullet[nBalasMetra++] = newtiro;
+								if (nParticulas < 299) {
+									particula newpart = {base_flash,
+													     SDL_GetTicks(),
+													     16,
+													     1,
+														 0};
+									marcos[nParticulas++] = newpart;
+									newpart = (particula) {base_cup,
+														   SDL_GetTicks(),
+														   16,
+														   2,
+														   0};
+									marcos[nParticulas++] = newpart;
+								}
+								break;
 							}
-							break;
 						}
 					}
-				}
+					
+	                //tiros soldados
+	                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
+	                	ultimoDisparoSoldado = SDL_GetTicks();
+		                for (int s = 0; s < nSoldados; s++) {
+		                	if (nBalasSoldado < 100) {
+			                    double anguloBalaSoldado = anguloEntrePontos(local,batalhao[s].local);
+			                    if(distanciaEntrePontos(batalhao[s].local,local) < 400 && batalhao[s].folga_de_fuga <= 0) {
+			                        projetil balanova = {batalhao[s].local,
+														 distanciaEntrePontos(batalhao[s].local,local),
+														 0,
+														 anguloBalaSoldado-8+rand()%17,
+														 200,
+														 2,
+														 0};
+			                        bala[nBalasSoldado++] = balanova;
+			                    }
+			            	} else 
+			            		break;
+						}
+	            	}
+	            	
+					//grade chao
+					int m;
+					for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
+						if ((int)limitarDouble(m+local.x+MWIDTH,100)==0)
+							lineRGBA(ren,m*zoom+MWIDTH,-100,m*zoom+MWIDTH,HEIGHT+100,0,50,0,255);
+					}
+					for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
+						if ((int)limitarDouble(m+local.y+HEIGHT,100)==0)
+							lineRGBA(ren,-100,m*zoom+MHEIGHT,WIDTH+100,m*zoom+MHEIGHT,0,50,0,255);
+					}
+					
+					//encontra o angulo da mira
+					SDL_FPoint mouse = {mx,my};	
+					angulo_alvo = anguloEntrePontos(mouse,centro_torre_absoluto);
 				
-                //tiros soldados
-                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
-                	ultimoDisparoSoldado = SDL_GetTicks();
-	                for (int s = 0; s < nSoldados; s++) {
-	                	if (nBalasSoldado < 100) {
-		                    double anguloBalaSoldado = anguloEntrePontos(local,batalhao[s].local);
-		                    if(distanciaEntrePontos(batalhao[s].local,local) < 400 && batalhao[s].folga_de_fuga <= 0) {
-		                        projetil balanova = {batalhao[s].local,
-													 distanciaEntrePontos(batalhao[s].local,local),
+					//ponto onde o canhao realmente esta mirando
+					double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
+					mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
+					
+					//atualização do terreno;
+					for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
+						SDL_Rect recorte = {0,0,100,100};
+						SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
+						SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
+					}
+					for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
+						SDL_Rect recorte = {100,0,100,100};
+						SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
+						SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
+					}
+					
+	                //sangue
+	                for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
+						SDL_Rect recorte = {0,0,60,50};
+						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
+												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 50*zoom};
+						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
+					}
+					for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
+						SDL_Rect recorte = {60,0,60,50};
+						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
+												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 50*zoom};
+						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
+					}
+					
+					//spawn e atualização de soldados
+					int s1,s2;
+	                if (nSoldados < 96 && SDL_GetTicks()-ultimoSpawn >= esperaPorInimigo) {
+	                	ultimoSpawn = SDL_GetTicks();
+	                	SDL_FPoint coord;
+	                	if (rand()%2 == 0) {
+	                		//coordenada fora dos limites superior e inferior da tela
+	                		coord = (SDL_FPoint){rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
+						} else {
+							coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
+							//coordenada fora dos limites esquerdo e direito da tela
+						}
+						coord = somar(coord,local);
+	                	for (s1 = 0; s1 < 5; s1++) {
+		                	SDL_FPoint var = {rand()%65,rand()%65};
+		                	soldado newsd = {somar(coord,var),
+		                					 1,
+		                					 rand()%4,
+											 0,
+											 0,
+											 (SDL_FPoint){rand()%15,rand()%15}};
+							batalhao[nSoldados++] = newsd;
+						}
+					}
+					for (s1 = 0; s1 < nSoldados; s1++) {
+						if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue)) {
+							continue;
+						}
+						atualizarPosicaoSoldado(&batalhao[s1],local);
+						for (s2 = s1+1; s2 < nSoldados; s2++) {
+							corrigirColisao(&batalhao[s1],&batalhao[s2]);
+						}
+						renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
+					}
+	                
+					//chassi do tanque
+					SDL_Texture * chassi;
+					if (zoom >= 0.2)
+						chassi = chassiHD; //eu sou o eraldo dou muito a bunda 
+					else 
+						chassi = chassiLQ;
+					SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
+					SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
+					
+					//metralhadora do chassi
+					SDL_FRect base_metralhadora = {base_metra.x,base_metra.y,14*zoom,8*zoom};
+					SDL_RenderCopyExF(ren,metralhadora_chassi,NULL,&base_metralhadora,angulo_metra,&centro_metra,SDL_FLIP_NONE);
+					
+					//flash da metralhadora
+					for (int p1 = 0; p1 < nParticulas; p1++) {
+						int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
+						if (marcos[p1].tempo_de_vida <= tempo_vivo) {
+							marcos[p1] = marcos[--nParticulas];
+							p1--;
+						}
+						SDL_FRect base;
+						switch (marcos[p1].tipo) {
+							case 1:
+								base = (SDL_FRect){base_flash.x,base_flash.y,37*zoom,33*zoom};
+								SDL_RenderCopyExF(ren,flash1,NULL,&base,angulo_metra,&centro_flash,SDL_FLIP_NONE);
+								break;
+						}
+					}
+					
+					//cupola da metralhadora do chassi
+					SDL_FRect base_cupola = {base_cup.x,base_cup.y,11*zoom,12*zoom};
+					SDL_RenderCopyExF(ren,cupola,NULL,&base_cupola,angulo,&centro_cupola,SDL_FLIP_NONE);
+					
+					//flash da cupola
+					for (int p1 = 0; p1 < nParticulas; p1++) {
+						int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
+						if (marcos[p1].tempo_de_vida < tempo_vivo) {
+							marcos[p1] = marcos[--nParticulas];
+							p1--;
+						}
+						SDL_FRect base;
+						switch (marcos[p1].tipo) {
+							case 2:
+								base = (SDL_FRect){base_cup.x,base_cup.y,11*zoom,12*zoom};
+								SDL_RenderCopyExF(ren,flash2,NULL,&base,angulo,&centro_cupola,SDL_FLIP_NONE);
+								break;
+						}
+					}
+					
+					//atualização de projeteis
+					int b1;
+					for (b1 = 0; b1 < nBalas; b1++) {
+						atualizarPosicaoProjetil(&hell[b1]);
+						renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
+						if (hell[b1].distanciaAlvo <= 0) {
+							if (nParticulas < 300) {
+								particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},
+													 SDL_GetTicks(),
+													 1000,
 													 0,
-													 anguloBalaSoldado-8+rand()%17,
-													 200,
-													 2,
 													 0};
-		                        bala[nBalasSoldado++] = balanova;
-		                    }
-		            	} else 
-		            		break;
-					}
-            	}
-            	
-				//grade chao
-				int m;
-				for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
-					if ((int)limitarDouble(m+local.x+MWIDTH,100)==0)
-						lineRGBA(ren,m*zoom+MWIDTH,-100,m*zoom+MWIDTH,HEIGHT+100,0,50,0,255);
-				}
-				for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
-					if ((int)limitarDouble(m+local.y+HEIGHT,100)==0)
-						lineRGBA(ren,-100,m*zoom+MHEIGHT,WIDTH+100,m*zoom+MHEIGHT,0,50,0,255);
-				}
-				
-				//encontra o angulo da mira
-				SDL_FPoint mouse = {mx,my};	
-				angulo_alvo = anguloEntrePontos(mouse,centro_torre_absoluto);
-			
-				//ponto onde o canhao realmente esta mirando
-				double distancia = hypot(mx-centro_torre_absoluto.x,my-centro_torre_absoluto.y);
-				mira_real = somar(centro_torre_absoluto,mover(distancia,angulo_arma));
-				
-				//atualização do terreno;
-				for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
-					SDL_Rect recorte = {0,0,100,100};
-					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
-					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
-				}
-				for (int t1 = 0; t1 < nObstaculos && t1<100; t1++) {
-					SDL_Rect recorte = {100,0,100,100};
-					SDL_FRect base_obs = {(obstaculos[t1].local.x-local.x-50)*zoom+MWIDTH,(obstaculos[t1].local.y-local.y-50)*zoom+MHEIGHT,100*zoom,100*zoom};
-					SDL_RenderCopyExF(ren,cratera,&recorte,&base_obs,0,NULL,SDL_FLIP_NONE);
-				}
-				
-                //sangue
-                for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
-					SDL_Rect recorte = {0,0,60,50};
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
-											 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-											 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
-											 50*zoom};
-					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
-				}
-				for (int t1 = 0; t1 < nSangue && t1<100; t1++) {
-					SDL_Rect recorte = {60,0,60,50};
-					SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
-											 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-											 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
-											 50*zoom};
-					SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
-				}
-				
-				//spawn e atualização de soldados
-				int s1,s2;
-                if (nSoldados < 96 && SDL_GetTicks()-ultimoSpawn >= esperaPorInimigo) {
-                	ultimoSpawn = SDL_GetTicks();
-                	SDL_FPoint coord;
-                	if (rand()%2 == 0) {
-                		//coordenada fora dos limites superior e inferior da tela
-                		coord = (SDL_FPoint){rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
-					} else {
-						coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
-						//coordenada fora dos limites esquerdo e direito da tela
-					}
-					coord = somar(coord,local);
-                	for (s1 = 0; s1 < 5; s1++) {
-	                	SDL_FPoint var = {rand()%65,rand()%65};
-	                	soldado newsd = {somar(coord,var),
-	                					 1,
-	                					 rand()%4,
-										 0,
-										 0,
-										 (SDL_FPoint){rand()%15,rand()%15}};
-						batalhao[nSoldados++] = newsd;
-					}
-				}
-				for (s1 = 0; s1 < nSoldados; s1++) {
-					if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue)) {
-						continue;
-					}
-					atualizarPosicaoSoldado(&batalhao[s1],local);
-					for (s2 = s1+1; s2 < nSoldados; s2++) {
-						corrigirColisao(&batalhao[s1],&batalhao[s2]);
-					}
-					renderizarSoldado(ren,soldados,batalhao[s1],local,centro_tanque,zoom);
-				}
-                
-				//chassi do tanque
-				SDL_Texture * chassi;
-				if (zoom >= 0.2)
-					chassi = chassiHD; //eu sou o eraldo dou muito a bunda 
-				else 
-					chassi = chassiLQ;
-				SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
-				SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
-				
-				//metralhadora do chassi
-				SDL_FRect base_metralhadora = {base_metra.x,base_metra.y,14*zoom,8*zoom};
-				SDL_RenderCopyExF(ren,metralhadora_chassi,NULL,&base_metralhadora,angulo_metra,&centro_metra,SDL_FLIP_NONE);
-				
-				//flash da metralhadora
-				for (int p1 = 0; p1 < nParticulas; p1++) {
-					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
-					if (marcos[p1].tempo_de_vida <= tempo_vivo) {
-						marcos[p1] = marcos[--nParticulas];
-						p1--;
-					}
-					SDL_FRect base;
-					switch (marcos[p1].tipo) {
-						case 1:
-							base = (SDL_FRect){base_flash.x,base_flash.y,37*zoom,33*zoom};
-							SDL_RenderCopyExF(ren,flash1,NULL,&base,angulo_metra,&centro_flash,SDL_FLIP_NONE);
-							break;
-					}
-				}
-				
-				//cupola da metralhadora do chassi
-				SDL_FRect base_cupola = {base_cup.x,base_cup.y,11*zoom,12*zoom};
-				SDL_RenderCopyExF(ren,cupola,NULL,&base_cupola,angulo,&centro_cupola,SDL_FLIP_NONE);
-				
-				//flash da cupola
-				for (int p1 = 0; p1 < nParticulas; p1++) {
-					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
-					if (marcos[p1].tempo_de_vida < tempo_vivo) {
-						marcos[p1] = marcos[--nParticulas];
-						p1--;
-					}
-					SDL_FRect base;
-					switch (marcos[p1].tipo) {
-						case 2:
-							base = (SDL_FRect){base_cup.x,base_cup.y,11*zoom,12*zoom};
-							SDL_RenderCopyExF(ren,flash2,NULL,&base,angulo,&centro_cupola,SDL_FLIP_NONE);
-							break;
-					}
-				}
-				
-				//atualização de projeteis
-				int b1;
-				for (b1 = 0; b1 < nBalas; b1++) {
-					atualizarPosicaoProjetil(&hell[b1]);
-					renderizarProjetil(ren,municao,hell[b1],local,centro_tanque,zoom);
-					if (hell[b1].distanciaAlvo <= 0) {
-						if (nParticulas < 300) {
-							particula newpart = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},
-												 SDL_GetTicks(),
-												 1000,
-												 0,
-												 0};
-							marcos[nParticulas++] = newpart;
-						}
-						
-						terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
-						obstaculos[(nObstaculos++)%100] = newobs;
-						
-						hell[b1] = hell[--nBalas];
-						b1--;
-					}
-				}
-				int b2, s;
-				for(b2 = 0; b2 < nBalasMetra; b2++){
-					atualizarPosicaoProjetil(&bullet[b2]);
-					renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom);
-					int bala_fora = (bullet[b2].distanciaAlvo <= 0),
-						matou = 0;
-					for(s = 0; s < nSoldados; s++){
-						if((colisaoBala(batalhao, sangue, s, bullet[b2], angulo_metra, &nSoldados, &nSangue))){
-							matou = 1;
-							break;
-						}
-					}
-					if((matou || bala_fora) && bullet[b2].tipo == 1){
-						bullet[b2] = bullet[--nBalasMetra];
-        				b2--;
-					}
-				}
-				
-                int b3;
-                for(b3 = 0; b3 < nBalasSoldado; b3++){
-                	atualizarPosicaoProjetil(&bala[b3]);
-                	renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
-                	int bala_fora = (bala[b3].distanciaAlvo <= 0);
-					if(bala_fora && bala[b3].tipo == 2){
-						bala[b3] = bala[--nBalasSoldado];
-        				b3--;
-					}
-				}
-				//laser desejado/laser real
-				lineRGBA(ren,centro_torre_absoluto.x,centro_torre_absoluto.y,
-				 		 mira_real.x-16*cos(radianos(angulo_arma)),
-						 mira_real.y-16*sin(radianos(angulo_arma)),
-						 255,255,255,25);
-				
-				//torre do tanque
-				SDL_Texture * torre;
-				if (zoom >= 0.2)
-					torre = torreHD;
-				else 
-					torre = torreLQ;
-				SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
-				SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
-				
-				//atualização de particulas
-				for (int p1 = 0; p1 < nParticulas; p1++) {
-					int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
-					if (marcos[p1].tempo_de_vida <= tempo_vivo) {
-						marcos[p1] = marcos[--nParticulas];
-						p1--;
-					}
-					SDL_Rect recorte;
-					SDL_FRect base;
-					switch (marcos[p1].tipo) {
-						case 0:
-							for (s1 = 0; s1 < nSoldados; s1++) {
-								if (!numeroDentroIntervalo(batalhao[s1].local.x,hell[b1].local.x-7.5*tempo_vivo/100,hell[b1].local.x+7.5*tempo_vivo/100))
-									continue;
-								if (!numeroDentroIntervalo(batalhao[s1].local.y,hell[b1].local.y-7.5*tempo_vivo/100,hell[b1].local.y+7.5*tempo_vivo/100))
-									continue;
-								batalhao[s1].vida = 0;
+								marcos[nParticulas++] = newpart;
 							}
-							recorte = (SDL_Rect){100*(int)((tempo_vivo%200)/40),100*(int)(tempo_vivo/200),100,100};
-							base = (SDL_FRect){(marcos[p1].local.x-local.x-100)*zoom+MWIDTH,(marcos[p1].local.y-local.y-100)*zoom+MHEIGHT,200*zoom,200*zoom};
-							SDL_RenderCopyExF(ren,explosao,&recorte,&base,0,NULL,SDL_FLIP_NONE);
-							break;
-						case 3:
-							int estagio = (int)(tempo_vivo/25);
-							SDL_FPoint vento = mover(1.5,angulo+180);
-							recorte = (SDL_Rect){50*estagio,0,50,50};
-							base = (SDL_FRect){(marcos[p1].local.x-local.x-12.5)*zoom+MWIDTH+zoom*vento.x*(int)(tempo_vivo/10),
-									(marcos[p1].local.y-local.y-12.5)*zoom+MHEIGHT+zoom*vento.y*(int)(tempo_vivo/10),
-									25*zoom,
-									25*zoom};
-							SDL_RenderCopyExF(ren,fumaca,&recorte,&base,rand()%360,&centro_exaustores,SDL_FLIP_NONE);
-							break;
+							
+							terreno newobs = {(SDL_FPoint){hell[b1].local.x,hell[b1].local.y},0,0};
+							obstaculos[(nObstaculos++)%100] = newobs;
+							
+							hell[b1] = hell[--nBalas];
+							b1--;
+						}
 					}
-				}
-				
-				//reticula desejada/reticula real
-				SDL_FRect r1 = {mx-20,my-20,41,41};
-				SDL_RenderCopyExF(ren,reticula1,NULL,&r1,0,NULL,SDL_FLIP_NONE);
-				
-				SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
-				SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
-                
-				//DEBUG
-				if (debug) {
-					infoBox(ren,170,0,200,57);
-					infoLabel(ren,170,0,"N Soldados: %4.1lf",nSoldados);
-					infoLabel(ren,170,11,"N Particulas: %4.1lf",nParticulas);
-					infoLabel(ren,170,22,"N BalasMetra: %4.1lf",nBalasMetra);
-					infoLabel(ren,170,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
-					infoLabel(ren,170,44,"N Sangue: %4.1lf",nSangue);
-				}
-				
-				//painel de controle do chassi
-				sprintf(x, "x: %4.1lf", local.x);
-				sprintf(y, "y: %4.1lf", -local.y);
-				sprintf(grau, "Angulo: %3.2lf", angulo);
-				sprintf(velocimetro, "Velocidade: ");
-				sprintf(numero, "%2.1lf", velocidade*1.2/10);
-				boxRGBA(ren,0,0,169,57,0,0,0,255);
-				stringRGBA(ren, 3, 3, x, 255,255,255,255);
-				stringRGBA(ren, 3, 14, y, 255,255,255,255);
-				stringRGBA(ren, 3, 25, grau, 255,255,255,255);
-				stringRGBA(ren, 3, 36, velocimetro, 255,255,255,255);
-				stringRGBA(ren, 100, 36, numero, 255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255);
-				stringRGBA(ren, 3, 47, state, 255,255,255,255);
-				rectangleRGBA(ren, 0,0,170,58,255,255,255,255);
-				
-				//painel de controle da torre
-				sprintf(angulotorre, "angulo da torre: %4.1lf", angulo_arma);
-				sprintf(anguloalvo, "angulo alvo: %4.1lf", angulo_alvo);
-				boxRGBA(ren,0,HEIGHT-25,179,HEIGHT,0,0,0,255);
-				stringRGBA(ren, 3, HEIGHT-23, angulotorre, 255,255,255,255);
-				stringRGBA(ren, 3, HEIGHT-12, anguloalvo, 255,255,255,255);
-				rectangleRGBA(ren, 0,HEIGHT-26,180,HEIGHT,255,255,255,255);
-				
-				//atualiza a velocidade e direção do movimento do tanque com base no estado
-				if (estado == PONTO_MORTO) {
-					;		
-				} else if (estado == TRANSV) {
-					if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-						velocidade += ACELERACAO_TRANS;
-					else
-						velocidade = VELOCIDADE_TRANS_MAXIMA;						
-				} else if (estado == ESQ_TRANSV) {
-					if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-						velocidade += ACELERACAO_TRANS;
-					else
-						velocidade = VELOCIDADE_TRANS_MAXIMA;
-					angulo -= VELOCIDADE_ANGULAR;
-					angulo_arma -= VELOCIDADE_ANGULAR;
-					angulo_metra -= VELOCIDADE_ANGULAR;
-				} else if (estado == DIR_TRANSV) {
-					if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-						velocidade += ACELERACAO_TRANS;
-					else
-						velocidade = VELOCIDADE_TRANS_MAXIMA;
-					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;
-					angulo_metra += VELOCIDADE_ANGULAR;	
-				} else if (estado == REV) {
-					if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-						velocidade -= ACELERACAO_REV;
-					else
-						velocidade = -VELOCIDADE_REV_MAXIMA;
-				} else if (estado == ESQ_REV) {
-					if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-						velocidade -= ACELERACAO_REV;
-					else
-						velocidade = -VELOCIDADE_REV_MAXIMA;
-					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;
-					angulo_metra += VELOCIDADE_ANGULAR;		
-				} else if (estado == DIR_REV) {
-					if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-						velocidade -= ACELERACAO_REV;
-					else
-						velocidade = -VELOCIDADE_REV_MAXIMA;
-					angulo -= VELOCIDADE_ANGULAR;
-					angulo_arma -= VELOCIDADE_ANGULAR;
-					angulo_metra -= VELOCIDADE_ANGULAR;
-				} else if (estado == ESQ) {
-					angulo -= VELOCIDADE_ANGULAR;
-					angulo_arma -= VELOCIDADE_ANGULAR;
-					angulo_metra -= VELOCIDADE_ANGULAR;
-				} else if (estado == DIR) {
-					angulo += VELOCIDADE_ANGULAR;
-					angulo_arma += VELOCIDADE_ANGULAR;
-					angulo_metra += VELOCIDADE_ANGULAR;
-				}
-				//atualiza os angulos
-				angulo_arma = limitarDouble(angulo_arma,360);
-				angulo = limitarDouble(angulo,360);
-				angulo_metra = limitarDouble(angulo_metra,360);
+					int b2, s;
+					for(b2 = 0; b2 < nBalasMetra; b2++){
+						atualizarPosicaoProjetil(&bullet[b2]);
+						renderizarProjetil(ren,municao_metralhadora, bullet[b2], local, centro_tanque, zoom);
+						int bala_fora = (bullet[b2].distanciaAlvo <= 0),
+							matou = 0;
+						for(s = 0; s < nSoldados; s++){
+							if((colisaoBala(batalhao, sangue, s, bullet[b2], angulo_metra, &nSoldados, &nSangue))){
+								matou = 1;
+								break;
+							}
+						}
+						if((matou || bala_fora) && bullet[b2].tipo == 1){
+							bullet[b2] = bullet[--nBalasMetra];
+	        				b2--;
+						}
+					}
 					
-				if (angulo_arma == angulo_alvo)
-					;
-				else if (angulo_arma+VELOCIDADE_TORRE > angulo_alvo && angulo_arma-VELOCIDADE_TORRE < angulo_alvo) {
-					angulo_arma = angulo_alvo;
-				} else {
-					if (angulo_arma >= 180 && (limitarDouble(angulo_arma+180,360) > angulo_alvo || angulo_arma < angulo_alvo))
-						angulo_arma += VELOCIDADE_TORRE;
-					else if (limitarDouble(angulo_arma+180,360) > angulo_alvo && angulo_arma < angulo_alvo)
-						angulo_arma += VELOCIDADE_TORRE;
+	                int b3;
+	                for(b3 = 0; b3 < nBalasSoldado; b3++){
+	                	atualizarPosicaoProjetil(&bala[b3]);
+	                	renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
+	                	int bala_fora = (bala[b3].distanciaAlvo <= 0);
+						if(bala_fora && bala[b3].tipo == 2){
+							bala[b3] = bala[--nBalasSoldado];
+	        				b3--;
+						}
+					}
+					//laser desejado/laser real
+					lineRGBA(ren,centro_torre_absoluto.x,centro_torre_absoluto.y,
+					 		 mira_real.x-16*cos(radianos(angulo_arma)),
+							 mira_real.y-16*sin(radianos(angulo_arma)),
+							 255,255,255,25);
+					
+					//torre do tanque
+					SDL_Texture * torre;
+					if (zoom >= 0.2)
+						torre = torreHD;
+					else 
+						torre = torreLQ;
+					SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
+					SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
+					
+					//atualização de particulas
+					for (int p1 = 0; p1 < nParticulas; p1++) {
+						int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
+						if (marcos[p1].tempo_de_vida <= tempo_vivo) {
+							marcos[p1] = marcos[--nParticulas];
+							p1--;
+						}
+						SDL_Rect recorte;
+						SDL_FRect base;
+						switch (marcos[p1].tipo) {
+							case 0:
+								for (s1 = 0; s1 < nSoldados; s1++) {
+									if (!numeroDentroIntervalo(batalhao[s1].local.x,hell[b1].local.x-7.5*tempo_vivo/100,hell[b1].local.x+7.5*tempo_vivo/100))
+										continue;
+									if (!numeroDentroIntervalo(batalhao[s1].local.y,hell[b1].local.y-7.5*tempo_vivo/100,hell[b1].local.y+7.5*tempo_vivo/100))
+										continue;
+									batalhao[s1].vida = 0;
+								}
+								recorte = (SDL_Rect){100*(int)((tempo_vivo%200)/40),100*(int)(tempo_vivo/200),100,100};
+								base = (SDL_FRect){(marcos[p1].local.x-local.x-100)*zoom+MWIDTH,(marcos[p1].local.y-local.y-100)*zoom+MHEIGHT,200*zoom,200*zoom};
+								SDL_RenderCopyExF(ren,explosao,&recorte,&base,0,NULL,SDL_FLIP_NONE);
+								break;
+							case 3:
+								int estagio = (int)(tempo_vivo/25);
+								SDL_FPoint vento = mover(1.5,angulo+180);
+								recorte = (SDL_Rect){50*estagio,0,50,50};
+								base = (SDL_FRect){(marcos[p1].local.x-local.x-12.5)*zoom+MWIDTH+zoom*vento.x*(int)(tempo_vivo/10),
+										(marcos[p1].local.y-local.y-12.5)*zoom+MHEIGHT+zoom*vento.y*(int)(tempo_vivo/10),
+										25*zoom,
+										25*zoom};
+								SDL_RenderCopyExF(ren,fumaca,&recorte,&base,rand()%360,&centro_exaustores,SDL_FLIP_NONE);
+								break;
+						}
+					}
+					
+					//reticula desejada/reticula real
+					SDL_FRect r1 = {mx-20,my-20,41,41};
+					SDL_RenderCopyExF(ren,reticula1,NULL,&r1,0,NULL,SDL_FLIP_NONE);
+					
+					SDL_FRect r2 = {mira_real.x-20,mira_real.y-20,41,41};
+					SDL_RenderCopyExF(ren,reticula2,NULL,&r2,0,NULL,SDL_FLIP_NONE);
+	                
+					//DEBUG
+					if (debug) {
+						infoBox(ren,170,0,200,57);
+						infoLabel(ren,170,0,"N Soldados: %4.1lf",nSoldados);
+						infoLabel(ren,170,11,"N Particulas: %4.1lf",nParticulas);
+						infoLabel(ren,170,22,"N BalasMetra: %4.1lf",nBalasMetra);
+						infoLabel(ren,170,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
+						infoLabel(ren,170,44,"N Sangue: %4.1lf",nSangue);
+					}
+					
+					//painel de controle do chassi
+					sprintf(x, "x: %4.1lf", local.x);
+					sprintf(y, "y: %4.1lf", -local.y);
+					sprintf(grau, "Angulo: %3.2lf", angulo);
+					sprintf(velocimetro, "Velocidade: ");
+					sprintf(numero, "%2.1lf", velocidade*1.2/10);
+					boxRGBA(ren,0,0,169,57,0,0,0,255);
+					stringRGBA(ren, 3, 3, x, 255,255,255,255);
+					stringRGBA(ren, 3, 14, y, 255,255,255,255);
+					stringRGBA(ren, 3, 25, grau, 255,255,255,255);
+					stringRGBA(ren, 3, 36, velocimetro, 255,255,255,255);
+					stringRGBA(ren, 100, 36, numero, 255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255);
+					stringRGBA(ren, 3, 47, state, 255,255,255,255);
+					rectangleRGBA(ren, 0,0,170,58,255,255,255,255);
+					
+					//painel de controle da torre
+					sprintf(angulotorre, "angulo da torre: %4.1lf", angulo_arma);
+					sprintf(anguloalvo, "angulo alvo: %4.1lf", angulo_alvo);
+					boxRGBA(ren,0,HEIGHT-25,179,HEIGHT,0,0,0,255);
+					stringRGBA(ren, 3, HEIGHT-23, angulotorre, 255,255,255,255);
+					stringRGBA(ren, 3, HEIGHT-12, anguloalvo, 255,255,255,255);
+					rectangleRGBA(ren, 0,HEIGHT-26,180,HEIGHT,255,255,255,255);
+					
+					//atualiza a velocidade e direção do movimento do tanque com base no estado
+					if (estado == PONTO_MORTO) {
+						;		
+					} else if (estado == TRANSV) {
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
+							velocidade += ACELERACAO_TRANS;
+						else
+							velocidade = VELOCIDADE_TRANS_MAXIMA;						
+					} else if (estado == ESQ_TRANSV) {
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
+							velocidade += ACELERACAO_TRANS;
+						else
+							velocidade = VELOCIDADE_TRANS_MAXIMA;
+						angulo -= VELOCIDADE_ANGULAR;
+						angulo_arma -= VELOCIDADE_ANGULAR;
+						angulo_metra -= VELOCIDADE_ANGULAR;
+					} else if (estado == DIR_TRANSV) {
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
+							velocidade += ACELERACAO_TRANS;
+						else
+							velocidade = VELOCIDADE_TRANS_MAXIMA;
+						angulo += VELOCIDADE_ANGULAR;
+						angulo_arma += VELOCIDADE_ANGULAR;
+						angulo_metra += VELOCIDADE_ANGULAR;	
+					} else if (estado == REV) {
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
+							velocidade -= ACELERACAO_REV;
+						else
+							velocidade = -VELOCIDADE_REV_MAXIMA;
+					} else if (estado == ESQ_REV) {
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
+							velocidade -= ACELERACAO_REV;
+						else
+							velocidade = -VELOCIDADE_REV_MAXIMA;
+						angulo += VELOCIDADE_ANGULAR;
+						angulo_arma += VELOCIDADE_ANGULAR;
+						angulo_metra += VELOCIDADE_ANGULAR;		
+					} else if (estado == DIR_REV) {
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
+							velocidade -= ACELERACAO_REV;
+						else
+							velocidade = -VELOCIDADE_REV_MAXIMA;
+						angulo -= VELOCIDADE_ANGULAR;
+						angulo_arma -= VELOCIDADE_ANGULAR;
+						angulo_metra -= VELOCIDADE_ANGULAR;
+					} else if (estado == ESQ) {
+						angulo -= VELOCIDADE_ANGULAR;
+						angulo_arma -= VELOCIDADE_ANGULAR;
+						angulo_metra -= VELOCIDADE_ANGULAR;
+					} else if (estado == DIR) {
+						angulo += VELOCIDADE_ANGULAR;
+						angulo_arma += VELOCIDADE_ANGULAR;
+						angulo_metra += VELOCIDADE_ANGULAR;
+					}
+					//atualiza os angulos
+					angulo_arma = limitarDouble(angulo_arma,360);
+					angulo = limitarDouble(angulo,360);
+					angulo_metra = limitarDouble(angulo_metra,360);
+						
+					if (angulo_arma == angulo_alvo)
+						;
+					else if (angulo_arma+VELOCIDADE_TORRE > angulo_alvo && angulo_arma-VELOCIDADE_TORRE < angulo_alvo) {
+						angulo_arma = angulo_alvo;
+					} else {
+						if (angulo_arma >= 180 && (limitarDouble(angulo_arma+180,360) > angulo_alvo || angulo_arma < angulo_alvo))
+							angulo_arma += VELOCIDADE_TORRE;
+						else if (limitarDouble(angulo_arma+180,360) > angulo_alvo && angulo_arma < angulo_alvo)
+							angulo_arma += VELOCIDADE_TORRE;
+						else
+							angulo_arma -= VELOCIDADE_TORRE;
+					}
+					//atualiza a posição do tanque e do ponteiro
+					SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
+					local = somar(local, deslocamento);
+					
+					//atualiza a velocidade do tanque
+					if (velocidade > 0)
+						velocidade = MAX(velocidade-DESACELERACAO, 0);
 					else
-						angulo_arma -= VELOCIDADE_TORRE;
+						velocidade = MIN(velocidade+DESACELERACAO, 0);
+					//nao exige explicações
+					SDL_RenderPresent(ren);
 				}
-				//atualiza a posição do tanque e do ponteiro
-				SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
-				local = somar(local, deslocamento);
-				
-				//atualiza a velocidade do tanque
-				if (velocidade > 0)
-					velocidade = MAX(velocidade-DESACELERACAO, 0);
-				else
-					velocidade = MIN(velocidade+DESACELERACAO, 0);
-				//nao exige explicações
-				SDL_RenderPresent(ren);
 			}
+		} else if (escolha == MENU_TUTORIAL) {
+			printf("Tutorial iniciado!");
+		} else if (escolha == MENU_CREDITS) {
+			printf("Bruno, Eraldo e Marcos");
+		} else if (escolha == MENU_SAIR) {
+			apprunning = 0;
 		}
-	} else if(escolha == MENU_TUTORIAL){
-		printf("Tutorial iniciado!");
-	} else if(escolha == MENU_CREDITS){
-		printf("Bruno, Eraldo e Marcos");
 	}
 	
 	//finaliza a aplicação

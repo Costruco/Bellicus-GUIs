@@ -7,6 +7,7 @@ typedef enum {
     MENU_PLAY,
     MENU_TUTORIAL,
     MENU_CREDITS,
+    MENU_SAIR,
     MENU_TOTAL
 } MenuOption;
 
