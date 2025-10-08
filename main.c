@@ -9,6 +9,7 @@
 
 #include "aritmetica.h"
 #include "espera.h"
+#include "estados.h"
 #include "interface.h"
 #include "menu.h"
 
@@ -16,18 +17,6 @@
 #define TPF 1000/FPS
 
 // 1 metro = 32.5 pixels
-
-enum Movimento {
-	PONTO_MORTO,
-	TRANSV,
-	REV,
-	ESQ_TRANSV,
-	DIR_TRANSV,
-	ESQ_REV,
-	DIR_REV,
-	ESQ,
-	DIR	
-};
 
 typedef struct terreno {
 	SDL_FPoint local;
@@ -264,7 +253,7 @@ int main(int argc, char* args[]) {
 			
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
-			enum Movimento estado = PONTO_MORTO;
+			enum movimento estado = PONTO_MORTO;
 			int gamerunning = 1,
 				debug = 0,
 				mx=0,my=0,
@@ -720,7 +709,11 @@ int main(int argc, char* args[]) {
 											  nBalasMetra,
 											  nBalasSoldado,
 											  nSangue};
-						infoLabel(ren,WIDTH-21*8-6,0,21,5,5,debuggers,debugData,NULL);
+						doubleDataLabel(ren,WIDTH-21*8-6,0,21,6,5,debuggers,debugData,NULL);
+						
+						char estadoString[12];
+						stateToString(estadoString,estado);
+						stringDataLabel(ren,WIDTH-21*8-6,0,5,"Estado: %s",estadoString,NULL);
 					}
 					
 					//painel de controle do chassi
@@ -739,14 +732,14 @@ int main(int argc, char* args[]) {
 											   branco,
 											   branco,
 											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255}};
-					infoLabel(ren,0,0,16,4,5,controleChassi,infoChassi,coresChassi);
+					doubleDataLabel(ren,0,0,16,4,5,controleChassi,infoChassi,coresChassi);
 					
 					//painel de controle da torre
 					char * controleTorre[] = {"angulo da torre: %6.2lf",
 											  "angulo alvo:     %6.2lf"};
 					double infoTorre[] = {angulo_arma,
 										  angulo_alvo};
-					infoLabel(ren,0,HEIGHT-25,23,2,2,controleTorre,infoTorre,NULL);		
+					doubleDataLabel(ren,0,HEIGHT-25,23,2,2,controleTorre,infoTorre,NULL);		
 					
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {

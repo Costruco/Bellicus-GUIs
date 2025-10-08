@@ -6,13 +6,13 @@
 
 #include "interface.h"
 
-void infoBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas) {
+void dataBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas) {
 	boxRGBA(ren,x,y,x+max_nLetras*8+5,y+nLinhas*11-1+3,0,0,0,255);
 	rectangleRGBA(ren,x,y,x+max_nLetras*8+6,y+nLinhas*11+3,255,255,255,255);
 }
 
-void infoLabel(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas, int nPalavras, char * strings[], double data[], SDL_Color cores[]) {
-	infoBox(ren,x,y,max_nLetras,nLinhas);
+void doubleDataLabel(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas, int nPalavras, char * strings[], double data[], SDL_Color cores[]) {
+	dataBox(ren,x,y,max_nLetras,nLinhas);
 	for (int i = 0, wc = 0; wc < nPalavras; i++, wc++) {
 		int concat = 0;
 		if (strings[wc][strlen(strings[wc])-1] == '-') {
@@ -28,5 +28,14 @@ void infoLabel(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas, i
 			stringRGBA(ren,x+3,y+3+i*11,newString,255,255,255,255);
 		i -= concat;
 	}
+}
+
+void stringDataLabel(SDL_Renderer * ren, int x, int y, int nLinhas, char * string, char * data, SDL_Color * cor) {
+	char newString[strlen(string)+1];
+	sprintf(newString,string,data);
+	if (cor != NULL)
+		stringRGBA(ren,x+3,y+3+nLinhas*11,newString,cor->r,cor->g,cor->b,cor->a);
+	else
+		stringRGBA(ren,x+3,y+3+nLinhas*11,newString,255,255,255,255);
 }
 
