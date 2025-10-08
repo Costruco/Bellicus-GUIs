@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-void infoBox(SDL_Renderer * ren, double x, double y, double w, double h);
-void infoLabel(SDL_Renderer * ren, double x, double y, char string[], double data);
+void infoBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas);
+void infoLabel(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas, int nPalavras, char * strings[], double data[], SDL_Color cores[]);
 
 #endif

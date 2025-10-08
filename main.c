@@ -86,8 +86,8 @@ void renderizarProjetil(SDL_Renderer * ren, SDL_Texture * textura, projetil bl1,
 	SDL_FRect base;
 	
 	if (bl1.tipo == 0 ){
-		recorte = (SDL_Rect){9*bl1.variacao,0,9,3};
-		base = (SDL_FRect){(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1.5-local.y)*escala+ctela.y,9*escala,3*escala};
+		recorte = (SDL_Rect){9*bl1.variacao,0,9,2};
+		base = (SDL_FRect){(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1-local.y)*escala+ctela.y,9*escala,2*escala};
 	} else if(bl1.tipo==1){
 		recorte = (SDL_Rect){50*bl1.variacao,0,50,1};
 		base = (SDL_FRect){(bl1.local.x-25-local.x)*escala+ctela.x,(bl1.local.y-0.5-local.y)*escala+ctela.y,50*escala,1*escala};
@@ -218,6 +218,9 @@ int main(int argc, char* args[]) {
 			SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
 			int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 			
+			//cores
+			SDL_Color branco = {255,255,255,255};
+			
 			//valores do veiculo
 			int VELOCIDADE_TRANS_MAXIMA = 441,
 				VELOCIDADE_REV_MAXIMA = 88,
@@ -260,19 +263,6 @@ int main(int argc, char* args[]) {
 	            nSangue=0;
 			
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
-				
-			//informações dos paineis
-			char x[30],
-				 y[30],
-				 grau[30],
-				 velocimetro[30],
-				 numero[30],
-				 state[30],
-				 angulotorre[30],
-				 anguloalvo[30];
-				
-			//estado inicial
-			sprintf(state, "Estado: PONTO_MORTO");
 			
 			enum Movimento estado = PONTO_MORTO;
 			int gamerunning = 1,
@@ -298,43 +288,26 @@ int main(int argc, char* args[]) {
 						if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
 							if (tecP[SDL_SCANCODE_A]) {
 								estado = ESQ_TRANSV;
-								sprintf(state, "Estado: ESQ_TRANSV");
 							} else if (tecP[SDL_SCANCODE_D]) {
 								estado = DIR_TRANSV;
-								sprintf(state, "Estado: DIR_TRANSV");
 							} else {
 								estado = TRANSV;
-								sprintf(state, "Estado: TRANSV");
-							}
-								
+							}		
 						} else if (tecP[SDL_SCANCODE_S]  && !tecP[SDL_SCANCODE_W]) {
 							if (tecP[SDL_SCANCODE_A]) {
 								estado = ESQ_REV;
-								sprintf(state, "Estado: ESQ_REV");
 							} else if (tecP[SDL_SCANCODE_D]) {
 								estado = DIR_REV;
-								sprintf(state, "Estado: DIR_REV");
 							} else {
 								estado = REV;
-								sprintf(state, "Estado: REV");
-							}
-								
+							}		
 						} else if (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]) {
-							estado = ESQ;
-							sprintf(state, "Estado: ESQ");
-							
-							
+							estado = ESQ;		
 						} else if (tecP[SDL_SCANCODE_D] && !tecP[SDL_SCANCODE_A]) {
-							estado = DIR;
-							sprintf(state, "Estado: DIR");
-							
-							
+							estado = DIR;	
 						} else {
 							estado = PONTO_MORTO;
-							sprintf(state, "Estado: PONTO_MORTO");
 						} 
-						
-						
 						if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0) {
 							zoom += 0.05;
 						} else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1) {
@@ -737,36 +710,43 @@ int main(int argc, char* args[]) {
 	                
 					//DEBUG
 					if (debug) {
-						infoBox(ren,170,0,200,57);
-						infoLabel(ren,170,0,"N Soldados: %4.1lf",nSoldados);
-						infoLabel(ren,170,11,"N Particulas: %4.1lf",nParticulas);
-						infoLabel(ren,170,22,"N BalasMetra: %4.1lf",nBalasMetra);
-						infoLabel(ren,170,33,"N BalasSoldado: %4.1lf",nBalasSoldado);
-						infoLabel(ren,170,44,"N Sangue: %4.1lf",nSangue);
+						char * debuggers[] = {"N Soldados:     %5.1lf",
+											  "N Particulas:   %5.1lf",
+											  "N BalasMetra:   %5.1lf",
+											  "N BalasSoldado: %5.1lf",
+											  "N Sangue:       %5.1lf"};
+						double debugData[] = {nSoldados,
+											  nParticulas,
+											  nBalasMetra,
+											  nBalasSoldado,
+											  nSangue};
+						infoLabel(ren,WIDTH-21*8-6,0,21,5,5,debuggers,debugData,NULL);
 					}
 					
 					//painel de controle do chassi
-					sprintf(x, "x: %4.1lf", local.x);
-					sprintf(y, "y: %4.1lf", -local.y);
-					sprintf(grau, "Angulo: %3.2lf", angulo);
-					sprintf(velocimetro, "Velocidade: ");
-					sprintf(numero, "%2.1lf", velocidade*1.2/10);
-					boxRGBA(ren,0,0,169,57,0,0,0,255);
-					stringRGBA(ren, 3, 3, x, 255,255,255,255);
-					stringRGBA(ren, 3, 14, y, 255,255,255,255);
-					stringRGBA(ren, 3, 25, grau, 255,255,255,255);
-					stringRGBA(ren, 3, 36, velocimetro, 255,255,255,255);
-					stringRGBA(ren, 100, 36, numero, 255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255);
-					stringRGBA(ren, 3, 47, state, 255,255,255,255);
-					rectangleRGBA(ren, 0,0,170,58,255,255,255,255);
+					char * controleChassi[] = {"x: %13.1lf",
+											   "y: %13.1lf",
+											   "Angulo:   %6.2lf",
+											   "Velocidade: -",
+											   "            %4.1lf"};
+					double infoChassi[] = {local.x,
+										   -local.y,
+										   angulo,
+										   NULL,
+										   velocidade*1.2/10};
+					SDL_Color coresChassi[] = {branco,
+											   branco,
+											   branco,
+											   branco,
+											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255}};
+					infoLabel(ren,0,0,16,4,5,controleChassi,infoChassi,coresChassi);
 					
 					//painel de controle da torre
-					sprintf(angulotorre, "angulo da torre: %4.1lf", angulo_arma);
-					sprintf(anguloalvo, "angulo alvo: %4.1lf", angulo_alvo);
-					boxRGBA(ren,0,HEIGHT-25,179,HEIGHT,0,0,0,255);
-					stringRGBA(ren, 3, HEIGHT-23, angulotorre, 255,255,255,255);
-					stringRGBA(ren, 3, HEIGHT-12, anguloalvo, 255,255,255,255);
-					rectangleRGBA(ren, 0,HEIGHT-26,180,HEIGHT,255,255,255,255);
+					char * controleTorre[] = {"angulo da torre: %6.2lf",
+											  "angulo alvo:     %6.2lf"};
+					double infoTorre[] = {angulo_arma,
+										  angulo_alvo};
+					infoLabel(ren,0,HEIGHT-25,23,2,2,controleTorre,infoTorre,NULL);		
 					
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {
