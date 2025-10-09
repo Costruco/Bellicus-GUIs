@@ -130,7 +130,9 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 	if (!numeroDentroIntervalo(normal.y-local.y,-48,48))
 		return 0;
     
-	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},angulo+180,velocidade};
+	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},
+					     angulo+180,
+						 velocidade};
 	sangue[((*nSangue)++)%100] = newsangue;
     
 	batalhao[i] = batalhao[--(*nSoldados)];
@@ -325,7 +327,7 @@ int main(int argc, char* args[]) {
 								projetil newtiro = {ponta_da_metra_coaxial,
 													3000,
 													0,
-													angulo_arma-0+rand()%1,
+													angulo_arma-2+rand()%3,
 													2000,
 													1,
 													0};
@@ -657,7 +659,7 @@ int main(int argc, char* args[]) {
 						int bala_fora = (bullet[b2].distanciaAlvo <= 0),
 							matou = 0;
 						for(s = 0; s < nSoldados; s++){
-							if((colisaoBala(batalhao, sangue, s, bullet[b2], angulo_metra, &nSoldados, &nSangue))){
+							if((colisaoBala(batalhao, sangue, s, bullet[b2], bullet[b2].angulo, &nSoldados, &nSangue))){
 								matou = 1;
 								break;
 							}
