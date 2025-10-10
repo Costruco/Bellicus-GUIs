@@ -756,7 +756,7 @@ int main(int argc, char* args[]) {
 											  nBalasMetra,
 											  nBalasSoldado,
 											  nSangue};
-						doubleDataLabel(ren,WIDTH-21*8-6,0,21,6,5,debuggers,debugData,NULL);
+						doubleDataLabel(ren,WIDTH-21*8-6,0,6,5,debuggers,debugData,NULL);
 						
 						char estadoString[12];
 						stateToString(estadoString,estado);
@@ -779,14 +779,14 @@ int main(int argc, char* args[]) {
 											   branco,
 											   branco,
 											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255}};
-					doubleDataLabel(ren,0,0,16,4,5,controleChassi,infoChassi,coresChassi);
+					doubleDataLabel(ren,0,0,4,5,controleChassi,infoChassi,coresChassi);
 					
 					//painel de controle da torre
 					char * controleTorre[] = {"angulo da torre: %6.2lf",
 											  "angulo alvo:     %6.2lf"};
 					double infoTorre[] = {angulo_arma,
 										  angulo_alvo};
-					doubleDataLabel(ren,0,HEIGHT-25,23,2,2,controleTorre,infoTorre,NULL);		
+					doubleDataLabel(ren,0,HEIGHT-25,2,2,controleTorre,infoTorre,NULL);		
 					
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {
