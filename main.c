@@ -764,11 +764,11 @@ int main(int argc, char* args[]) {
 					}
 					
 					//painel de controle do chassi
-					char * controleChassi[] = {"x: %13.1lf",
-											   "y: %13.1lf",
-											   "Angulo:   %6.2lf",
+					char * controleChassi[] = {"x: %14.1lf",
+											   "y: %14.1lf",
+											   "Angulo:   %7.2lf",
 											   "Velocidade: -",
-											   "            %4.1lf"};
+											   "            %5.1lf"};
 					double infoChassi[] = {local.x,
 										   -local.y,
 										   angulo,
