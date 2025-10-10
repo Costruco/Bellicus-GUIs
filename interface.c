@@ -7,7 +7,7 @@
 #include "interface.h"
 	
 int stringFormatSize(char * string) {
-	int i = 0, n = 0, lendoFormato = 0;
+	int i = 0, n = 0, lendoFormato = 0, total = 0;
 	while (string[i] != '\0') {
 		switch (lendoFormato) {
 			case 0:
@@ -18,7 +18,12 @@ int stringFormatSize(char * string) {
 				break;
 			case 1:
 				if (string[i] > 47 && string[i] < 58) {
-					n += string[i]-49;
+					total *= 10;
+					total += string[i]-48;
+					n--;
+				} else {
+					n += total-1;
+					total = 0;
 					lendoFormato = 2;
 				}
 				break;
