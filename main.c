@@ -200,7 +200,8 @@ int main(int argc, char* args[]) {
 						* flash2 = IMG_LoadTexture(ren, "./sprites/flash_cupola_chassi.png"),
 						* flash3 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_coaxial.png"),
 						* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
-	                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png");
+	                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
+						* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
 			
 			//angulos e posições das lagartas
 			double angulo = 0, 
@@ -257,9 +258,10 @@ int main(int argc, char* args[]) {
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
 			movimento estado = PONTO_MORTO;
-			int gamerunning = 1,
+			int seed = rand(),
+				gamerunning = 1,
 				debug = 0,
-				grid = 1,
+				grid = 0,
 				mx=0,my=0,
 				esperaPorInimigo = 2000,
 				esperaPorFumaca = 7,
@@ -276,35 +278,39 @@ int main(int argc, char* args[]) {
 				//recebe os inputs e atualiza o estado de movimentação do tanque
 				int isevt = AUX_WaitEventTimeoutCount(&evt, &espera);
 				if (isevt) {
+					int esq_nao_dir = (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]),
+						dir_nao_esq = (!tecP[SDL_SCANCODE_A] && tecP[SDL_SCANCODE_D]);
 					switch (evt.type) {	
 					case SDL_KEYDOWN:
 					case SDL_KEYUP:
 						if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
-							if (tecP[SDL_SCANCODE_A]) {
+							if (esq_nao_dir)
 								estado = ESQ_TRANSV;
-							} else if (tecP[SDL_SCANCODE_D]) {
+							else if (dir_nao_esq)
 								estado = DIR_TRANSV;
-							} else {
+							else
 								estado = TRANSV;
-							}		
-						} else if (tecP[SDL_SCANCODE_S]  && !tecP[SDL_SCANCODE_W]) {
-							if (tecP[SDL_SCANCODE_A]) {
+								
+						} else if (tecP[SDL_SCANCODE_S] && !tecP[SDL_SCANCODE_W]) {
+							if (esq_nao_dir)
 								estado = ESQ_REV;
-							} else if (tecP[SDL_SCANCODE_D]) {
+							else if (dir_nao_esq)
 								estado = DIR_REV;
-							} else {
+							else
 								estado = REV;
-							}		
-						} else if (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]) {
-							estado = ESQ;		
-						} else if (tecP[SDL_SCANCODE_D] && !tecP[SDL_SCANCODE_A]) {
+								
+						} else if (esq_nao_dir)
+							estado = ESQ;	
+								
+						else if (dir_nao_esq)
 							estado = DIR;	
-						} else {
+							
+						else
 							estado = PONTO_MORTO;
-						} 
-						if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0) {
+						
+						if (tecP[SDL_SCANCODE_KP_PLUS] && !tecP[SDL_SCANCODE_KP_MINUS] && zoom < 3.0) {
 							zoom += 0.05;
-						} else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1) {
+						} else if (tecP[SDL_SCANCODE_KP_MINUS] && !tecP[SDL_SCANCODE_KP_PLUS] && zoom > 0.1) {
 							zoom -= 0.05;
 						}
 						if (tecP[SDL_SCANCODE_F3]) {
@@ -502,14 +508,26 @@ int main(int argc, char* args[]) {
 						}
 	            	}
 	            	
+	            	//textura do chao
+	            	for (int m = -MWIDTH/zoom-100; m < MWIDTH/zoom+100; m++) {
+						if ((int)limitarDouble(m+local.x,100) == 0) {
+							for (int n = -MHEIGHT/zoom-100; n < MHEIGHT/zoom+100; n++) {
+								if ((int)limitarDouble(n+local.y,100) == 0) {
+									SDL_Rect recorte = {(int)(limitarDouble(m+local.x+seed,200)/100)*100,(int)(limitarDouble(n+local.y+seed,200)/100)*100,100,100};
+									SDL_FRect base = {m*zoom+MWIDTH,n*zoom+MHEIGHT,100*zoom,100*zoom};
+									SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,SDL_FLIP_NONE);
+								}
+							}
+						}
+					}
+					
 					//grade chao
 					if (grid) {
-						int m;
-						for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
+						for (int m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
 							if ((int)limitarDouble(m+local.x,100) == 0)
 								lineRGBA(ren,m*zoom+MWIDTH,0,m*zoom+MWIDTH,HEIGHT,0,50,0,255);
 						}
-						for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
+						for (int m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
 							if ((int)limitarDouble(m+local.y,100) == 0)
 								lineRGBA(ren,0,m*zoom+MHEIGHT,WIDTH,m*zoom+MHEIGHT,0,50,0,255);
 						}
