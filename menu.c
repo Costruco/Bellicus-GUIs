@@ -6,7 +6,7 @@
 #include "espera.h"
 #include "menu.h"
 
-MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win) {
+MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int height) {
     SDL_Surface* tempSurface = IMG_Load("./img/bellicus_inicio.png");
     SDL_Texture* background = SDL_CreateTextureFromSurface(renderer, tempSurface);
     SDL_FreeSurface(tempSurface);
@@ -61,8 +61,8 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win) {
         SDL_Rect setaRect;
         setaRect.w = 40; 
         setaRect.h = 40; 
-        setaRect.x = 880; 
-        setaRect.y = 335 + selected * 90;
+        setaRect.x = 1.32*width/2; 
+        setaRect.y = (height/2.22) + selected * height/9;
         SDL_RenderCopy(renderer, setaTex, NULL, &setaRect);
 
         SDL_RenderPresent(renderer);

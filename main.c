@@ -168,13 +168,17 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
+	int WIDTH, 
+		HEIGHT;
+	SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
+	int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_ShowCursor(SDL_DISABLE);
 	srand(SDL_GetTicks());
 	int apprunning = 1;
 	
 	while (!SDL_QuitRequested() && apprunning) {
-		MenuOption escolha = menu_loop(ren, win);
+		MenuOption escolha = menu_loop(ren, win, WIDTH, HEIGHT);
 		//MENU DO JOGO
 		if(escolha == MENU_PLAY){
 			//sprites
@@ -205,10 +209,10 @@ int main(int argc, char* args[]) {
 				   angulo_alvo = 0;
 				
 			//valores do jogo
-			int WIDTH, 
-				HEIGHT;
-			SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
-			int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
+			// int WIDTH, 
+			// 	HEIGHT;
+			// SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
+			// int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 			
 			//cores
 			SDL_Color branco = {255,255,255,255};
@@ -772,7 +776,7 @@ int main(int argc, char* args[]) {
 					double infoChassi[] = {local.x,
 										   -local.y,
 										   angulo,
-										   NULL,
+										   0,
 										   velocidade*1.2/10};
 					SDL_Color coresChassi[] = {branco,
 											   branco,

@@ -15,6 +15,6 @@ enum movimento {
 	DIR	
 };
 
-void stateToString(char * string, movimento estado);
+void stateToString(char * string, enum movimento estado);
 
 #endif

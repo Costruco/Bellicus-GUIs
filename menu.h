@@ -11,6 +11,6 @@ typedef enum {
     MENU_TOTAL
 } MenuOption;
 
-MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* window);
+MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* window, int width, int height);
 
 #endif
