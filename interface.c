@@ -17,9 +17,9 @@ int stringFormatSize(char * string) {
 				}	
 				break;
 			case 1:
-				if (string[i] > 47 && string[i] < 58) {
+				if (string[i] >= '0' && string[i] <= '9') {
 					total *= 10;
-					total += string[i]-48;
+					total += string[i]-'0';
 					n--;
 				} else {
 					n += total-1;
@@ -28,9 +28,9 @@ int stringFormatSize(char * string) {
 				}
 				break;
 			case 2:
-				if (string[i] == 32)
+				if (string[i] == ' ')
 					lendoFormato = 0;
-				else if (string[i] == 37)
+				else if (string[i] == '%')
 					lendoFormato = 1;
 				else
 					n--;
@@ -47,13 +47,15 @@ void dataBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas) {
 	rectangleRGBA(ren,x,y,x+max_nLetras*8+6,y+nLinhas*11+3,255,255,255,255);
 }
 
-void doubleDataLabel(SDL_Renderer * ren, int x, int y, int nLinhas, int nPalavras, char * strings[], double data[], SDL_Color cores[]) {
-	int max_nLetras = 0;
+void doubleDataLabel(SDL_Renderer * ren, int x, int y, int nPalavras, char * strings[], double data[], SDL_Color cores[]) {
+	int max_nLetras = 0, nLinhas = nPalavras;
 	for (int i = 0; i < nPalavras; i++) {
 		int new_max = stringFormatSize(strings[i]);
 		if (new_max > max_nLetras) {
 			max_nLetras = new_max;
 		}
+		if (strings[i][strlen(strings[i])-1] == '-')
+			nLinhas--;
 	}
 	dataBox(ren,x,y,max_nLetras,nLinhas);
 	for (int i = 0, wc = 0; wc < nPalavras; i++, wc++) {

@@ -238,7 +238,7 @@ int main(int argc, char* args[]) {
 					   centro_torre_absoluto = somar(centro_tanque,torre_offset),
 					   centro_torre_relativo = torre_offset,
 					   mira_real,
-					   local = {0,0};
+					   local = {0.1,0.1};
 			terreno sangue[100];		  		
 			terreno obstaculos[100];
 			particula marcos[300];
@@ -259,6 +259,7 @@ int main(int argc, char* args[]) {
 			movimento estado = PONTO_MORTO;
 			int gamerunning = 1,
 				debug = 0,
+				grid = 1,
 				mx=0,my=0,
 				esperaPorInimigo = 2000,
 				esperaPorFumaca = 7,
@@ -311,6 +312,12 @@ int main(int argc, char* args[]) {
 								debug = 1;
 							else
 								debug = 0;
+						}
+						if (tecP[SDL_SCANCODE_G]) {
+							if (grid == 0)
+								grid = 1;
+							else
+								grid = 0;
 						}
 						if (tecP[SDL_SCANCODE_ESCAPE]) {
 							gamerunning = 0;
@@ -496,14 +503,16 @@ int main(int argc, char* args[]) {
 	            	}
 	            	
 					//grade chao
-					int m;
-					for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
-						if ((int)limitarDouble(m+local.x+MWIDTH,100)==0)
-							lineRGBA(ren,m*zoom+MWIDTH,-100,m*zoom+MWIDTH,HEIGHT+100,0,50,0,255);
-					}
-					for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
-						if ((int)limitarDouble(m+local.y+HEIGHT,100)==0)
-							lineRGBA(ren,-100,m*zoom+MHEIGHT,WIDTH+100,m*zoom+MHEIGHT,0,50,0,255);
+					if (grid) {
+						int m;
+						for (m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
+							if ((int)limitarDouble(m+local.x,100) == 0)
+								lineRGBA(ren,m*zoom+MWIDTH,0,m*zoom+MWIDTH,HEIGHT,0,50,0,255);
+						}
+						for (m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
+							if ((int)limitarDouble(m+local.y,100) == 0)
+								lineRGBA(ren,0,m*zoom+MHEIGHT,WIDTH,m*zoom+MHEIGHT,0,50,0,255);
+						}
 					}
 					
 					//encontra o angulo da mira
@@ -748,13 +757,14 @@ int main(int argc, char* args[]) {
 											  "N Particulas:   %5.1lf",
 											  "N BalasMetra:   %5.1lf",
 											  "N BalasSoldado: %5.1lf",
-											  "N Sangue:       %5.1lf"};
+											  "N Sangue:       %5.1lf",
+											  ""};
 						double debugData[] = {nSoldados,
 											  nParticulas,
 											  nBalasMetra,
 											  nBalasSoldado,
 											  nSangue};
-						doubleDataLabel(ren,WIDTH-21*8-6,0,6,5,debuggers,debugData,NULL);
+						doubleDataLabel(ren,WIDTH-21*8-6,0,6,debuggers,debugData,NULL);
 						
 						char estadoString[12];
 						stateToString(estadoString,estado);
@@ -762,9 +772,9 @@ int main(int argc, char* args[]) {
 					}
 					
 					//painel de controle do chassi
-					char * controleChassi[] = {"x: %14.1lf",
-											   "y: %14.1lf",
-											   "Angulo:   %7.2lf",
+					char * controleChassi[] = {"x: %14.0lf",
+											   "y: %14.0lf",
+											   "Angulo: %9.2lf",
 											   "Velocidade: -",
 											   "            %5.1lf"};
 					double infoChassi[] = {local.x,
@@ -777,14 +787,14 @@ int main(int argc, char* args[]) {
 											   branco,
 											   branco,
 											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255}};
-					doubleDataLabel(ren,0,0,4,5,controleChassi,infoChassi,coresChassi);
+					doubleDataLabel(ren,0,0,5,controleChassi,infoChassi,coresChassi);
 					
 					//painel de controle da torre
 					char * controleTorre[] = {"angulo da torre: %6.2lf",
 											  "angulo alvo:     %6.2lf"};
 					double infoTorre[] = {angulo_arma,
 										  angulo_alvo};
-					doubleDataLabel(ren,0,HEIGHT-25,2,2,controleTorre,infoTorre,NULL);		
+					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
 					
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {
