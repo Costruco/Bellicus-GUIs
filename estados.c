@@ -2,7 +2,7 @@
 
 #include "estados.h"
 
-void stateToString(char * string, enum movimento estado) {
+void stateToString(char * string, movimento estado) {
 	switch (estado) {
 		case PONTO_MORTO:
 			strcpy(string,"PONTO_MORTO");

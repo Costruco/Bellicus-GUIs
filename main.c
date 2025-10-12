@@ -207,12 +207,6 @@ int main(int argc, char* args[]) {
 				   angulo_arma = 0,
 				   angulo_metra = 0, 
 				   angulo_alvo = 0;
-				
-			//valores do jogo
-			// int WIDTH, 
-			// 	HEIGHT;
-			// SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
-			// int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 			
 			//cores
 			SDL_Color branco = {255,255,255,255};
@@ -262,7 +256,7 @@ int main(int argc, char* args[]) {
 			
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
-			enum movimento estado = PONTO_MORTO;
+			movimento estado = PONTO_MORTO;
 			int gamerunning = 1,
 				debug = 0,
 				mx=0,my=0,

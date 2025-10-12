@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-enum movimento {
+typedef enum movimento {
 	PONTO_MORTO,
 	TRANSV,
 	REV,
@@ -13,8 +13,8 @@ enum movimento {
 	DIR_REV,
 	ESQ,
 	DIR	
-};
+} movimento;
 
-void stateToString(char * string, enum movimento estado);
+void stateToString(char * string, movimento estado);
 
 #endif
