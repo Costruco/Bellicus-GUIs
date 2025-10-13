@@ -308,11 +308,13 @@ int main(int argc, char* args[]) {
 						else
 							estado = PONTO_MORTO;
 						
-						if (tecP[SDL_SCANCODE_KP_PLUS] && !tecP[SDL_SCANCODE_KP_MINUS] && zoom < 3.0) {
-							zoom += 0.05;
-						} else if (tecP[SDL_SCANCODE_KP_MINUS] && !tecP[SDL_SCANCODE_KP_PLUS] && zoom > 0.1) {
+						if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
+							;
+						else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1)
 							zoom -= 0.05;
-						}
+						else if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0)
+							zoom += 0.05;
+							
 						if (tecP[SDL_SCANCODE_F3]) {
 							if (debug == 0)
 								debug = 1;
@@ -380,8 +382,7 @@ int main(int argc, char* args[]) {
 				//atualiza o frame
 				if (espera == 0) {
 					espera = TPF;
-					//fundo verde
-					SDL_SetRenderDrawColor(ren,0,100,0,255);
+					//limpa a tela
 					SDL_RenderClear(ren);
 					
 					//particula dos exaustores
@@ -509,27 +510,31 @@ int main(int argc, char* args[]) {
 	            	}
 	            	
 	            	//textura do chao
-	            	for (int m = -MWIDTH/zoom-100; m < MWIDTH/zoom+100; m++) {
-						if ((int)limitarDouble(m+local.x,100) == 0) {
-							for (int n = -MHEIGHT/zoom-100; n < MHEIGHT/zoom+100; n++) {
-								if ((int)limitarDouble(n+local.y,100) == 0) {
-									SDL_Rect recorte = {(int)(limitarDouble(m+local.x+seed,200)/100)*100,(int)(limitarDouble(n+local.y+seed,200)/100)*100,100,100};
-									SDL_FRect base = {m*zoom+MWIDTH,n*zoom+MHEIGHT,100*zoom,100*zoom};
-									SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,SDL_FLIP_NONE);
-								}
+	            	for (int m = -MWIDTH/zoom-100-(int)limitarDouble(-MWIDTH/zoom+local.x,100); m < MWIDTH/zoom+100; m+=100) {
+						for (int n = -MHEIGHT/zoom-100-(int)limitarDouble(-MHEIGHT/zoom+local.y,100); n < MHEIGHT/zoom+100; n+=100) {
+							SDL_Rect recorte = {(int)(limitarDouble(m+local.x+seed,200)/100)*100,
+												(int)(limitarDouble(n+local.y+seed,200)/100)*100,
+												100,100};
+							SDL_FRect base = {m*zoom+MWIDTH,n*zoom+MHEIGHT,100*zoom,100*zoom};
+							SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,SDL_FLIP_NONE);
+							
+							//coordenada dos pontos da grade
+							if (debug && grid) {
+								char string[30];
+								sprintf(string,"%d,%d",(int)(m+local.x),(int)(n+local.y));
+								circleRGBA(ren,m*zoom+MWIDTH,n*zoom+MHEIGHT,5,0,0,255,255);
+								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+5,string,255,255,255,255);
 							}
 						}
 					}
 					
 					//grade chao
 					if (grid) {
-						for (int m = -MWIDTH/zoom; m < MWIDTH/zoom; m++) {
-							if ((int)limitarDouble(m+local.x,100) == 0)
-								lineRGBA(ren,m*zoom+MWIDTH,0,m*zoom+MWIDTH,HEIGHT,0,50,0,255);
+						for (int m = -MWIDTH/zoom+100-(int)limitarDouble(-MWIDTH/zoom+local.x,100); m < MWIDTH/zoom; m+=100) {
+							lineRGBA(ren,m*zoom+MWIDTH,0,m*zoom+MWIDTH,HEIGHT,0,50,0,255);
 						}
-						for (int m = -MHEIGHT/zoom; m < MHEIGHT/zoom; m++) {
-							if ((int)limitarDouble(m+local.y,100) == 0)
-								lineRGBA(ren,0,m*zoom+MHEIGHT,WIDTH,m*zoom+MHEIGHT,0,50,0,255);
+						for (int n = -MHEIGHT/zoom+100-(int)limitarDouble(-MHEIGHT/zoom+local.y,100); n < MHEIGHT/zoom; n+=100) {
+							lineRGBA(ren,0,n*zoom+MHEIGHT,WIDTH,n*zoom+MHEIGHT,0,50,0,255);
 						}
 					}
 					
@@ -771,22 +776,27 @@ int main(int argc, char* args[]) {
 	                
 					//DEBUG
 					if (debug) {
-						char * debuggers[] = {"N Soldados:     %5.1lf",
+						char * debuggers1[] = {"N Soldados:     %5.1lf",
 											  "N Particulas:   %5.1lf",
 											  "N BalasMetra:   %5.1lf",
 											  "N BalasSoldado: %5.1lf",
 											  "N Sangue:       %5.1lf",
 											  ""};
-						double debugData[] = {nSoldados,
+						double debugData1[] = {nSoldados,
 											  nParticulas,
 											  nBalasMetra,
 											  nBalasSoldado,
 											  nSangue};
-						doubleDataLabel(ren,WIDTH-21*8-6,0,6,debuggers,debugData,NULL);
+						doubleDataLabel(ren,WIDTH-21*8-6,0,6,debuggers1,debugData1,NULL);
 						
 						char estadoString[12];
 						stateToString(estadoString,estado);
 						stringDataLabel(ren,WIDTH-21*8-6,0,5,"Estado: %s",estadoString,NULL);
+						
+						char string[12];
+						dataBox(ren,MWIDTH-11*4-3,0,11,1);
+						sprintf(string,"%d %d %d %d %d %d",tecP[SDL_SCANCODE_W],tecP[SDL_SCANCODE_A],tecP[SDL_SCANCODE_S],tecP[SDL_SCANCODE_D],tecP[SDL_SCANCODE_KP_PLUS],tecP[SDL_SCANCODE_KP_MINUS]);
+						stringRGBA(ren,MWIDTH-11*4,3,string,255,255,255,255);
 					}
 					
 					//painel de controle do chassi
@@ -894,6 +904,7 @@ int main(int argc, char* args[]) {
 						velocidade = MAX(velocidade-DESACELERACAO, 0);
 					else
 						velocidade = MIN(velocidade+DESACELERACAO, 0);
+					
 					//nao exige explicações
 					SDL_RenderPresent(ren);
 				}
