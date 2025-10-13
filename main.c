@@ -281,7 +281,7 @@ int main(int argc, char* args[]) {
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
 				for (int j = 0; j < MAP_Y_SIZE/100; j++) {
 					mapa[i][j].x = rand()%16;
-					mapa[i][j].y = rand()%3;
+					mapa[i][j].y = rand()%4;
 				}
 			}
 			//medidor de FPS
