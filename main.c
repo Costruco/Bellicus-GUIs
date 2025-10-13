@@ -562,12 +562,12 @@ int main(int argc, char* args[]) {
 							SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,(SDL_RendererFlip)mapa[i][j].y);
 							
 							//coordenada dos pontos da grade
-							if (debug && grid) {
+							if (debug && grid && zoom >= 0.7) {
 								circleRGBA(ren,m*zoom+MWIDTH,n*zoom+MHEIGHT,5,0,0,255,255);
 								char string[30];
-								sprintf(string,"%d,%d",m+(int)local.x,n+(int)local.y);
+								sprintf(string,"%d",m+(int)local.x);
 								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+5,string,255,255,255,255);
-								sprintf(string,"%d",m+n+(int)local.x+(int)local.y);
+								sprintf(string,"%d",n+(int)local.y);
 								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+16,string,255,255,255,255);
 							}
 						}
