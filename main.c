@@ -170,6 +170,8 @@ int main(int argc, char* args[]) {
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
 	int WIDTH, 
 		HEIGHT;
+	int MAP_X_SIZE = 10000,
+		MAP_Y_SIZE = 10000;
 	SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
 	int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
@@ -274,6 +276,15 @@ int main(int argc, char* args[]) {
 				
 			Uint32 espera = TPF;
 			SDL_Event evt;
+			
+			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
+			for (int i = 0; i < MAP_X_SIZE/100; i++) {
+				for (int j = 0; j < MAP_Y_SIZE/100; j++) {
+					mapa[i][j].x = rand()%16;
+					mapa[i][j].y = rand()%3;
+				}
+			}
+			
 			while (gamerunning && apprunning) {
 				//recebe os inputs e atualiza o estado de movimentação do tanque
 				int isevt = AUX_WaitEventTimeoutCount(&evt, &espera);
@@ -510,30 +521,59 @@ int main(int argc, char* args[]) {
 	            	}
 	            	
 	            	//textura do chao
-	            	for (int m = -MWIDTH/zoom-100-(int)limitarDouble(-MWIDTH/zoom+local.x,100); m < MWIDTH/zoom+100; m+=100) {
-						for (int n = -MHEIGHT/zoom-100-(int)limitarDouble(-MHEIGHT/zoom+local.y,100); n < MHEIGHT/zoom+100; n+=100) {
-							SDL_Rect recorte = {(int)(limitarDouble(m+local.x+seed,200)/100)*100,
-												(int)(limitarDouble(n+local.y+seed,200)/100)*100,
+	            	int inicio_x = -MWIDTH/zoom-100-limitarInt(-MWIDTH/zoom+(int)local.x,100),
+	            		inicio_y = -MHEIGHT/zoom-100-limitarInt(-MHEIGHT/zoom+(int)local.y,100),
+						fim_x = MWIDTH/zoom+100,
+						fim_y = MHEIGHT/zoom+100;
+						
+					int xneg = (inicio_x+local.x < -MAP_X_SIZE/2),
+						xpos = (fim_x+local.x > MAP_X_SIZE/2),
+						yneg = (inicio_y+local.y < -MAP_Y_SIZE/2),
+						ypos = (fim_y+local.y > MAP_Y_SIZE/2);
+						
+	            	if (xneg)
+	            		inicio_x = -MAP_X_SIZE/2-local.x;
+	            	if (xpos)
+	            		fim_x = MAP_X_SIZE/2-local.x;
+	            	if (yneg)
+	            		inicio_y = -MAP_Y_SIZE/2-local.y;
+	            	if (ypos)
+	            		fim_y = MAP_Y_SIZE/2-local.y;
+	            		
+	            	for (int m = inicio_x, i = (m+(int)local.x+MAP_X_SIZE/2)/100; m < fim_x; m+=100, i++) {
+						for (int n = inicio_y, j = (n+(int)local.y+MAP_Y_SIZE/2)/100; n < fim_y; n+=100, j++) {
+							SDL_Rect recorte = {(mapa[i][j].x%4)*100,
+												(mapa[i][j].x/4)*100,
 												100,100};
 							SDL_FRect base = {m*zoom+MWIDTH,n*zoom+MHEIGHT,100*zoom,100*zoom};
-							SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,SDL_FLIP_NONE);
+							SDL_RenderCopyExF(ren,tile_map,&recorte,&base,0,NULL,(SDL_RendererFlip)mapa[i][j].y);
 							
 							//coordenada dos pontos da grade
 							if (debug && grid) {
-								char string[30];
-								sprintf(string,"%d,%d",(int)(m+local.x),(int)(n+local.y));
 								circleRGBA(ren,m*zoom+MWIDTH,n*zoom+MHEIGHT,5,0,0,255,255);
+								char string[30];
+								sprintf(string,"%d,%d",m+(int)local.x,n+(int)local.y);
 								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+5,string,255,255,255,255);
+								sprintf(string,"%d",m+n+(int)local.x+(int)local.y);
+								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+16,string,255,255,255,255);
 							}
 						}
 					}
+					if (xneg)
+	            		thickLineRGBA(ren,inicio_x*zoom+MWIDTH,inicio_y*zoom+MHEIGHT,inicio_x*zoom+MWIDTH,fim_y*zoom+MHEIGHT,3,255,0,0,255);
+	            	if (xpos)
+	            		thickLineRGBA(ren,fim_x*zoom+MWIDTH,inicio_y*zoom+MHEIGHT,fim_x*zoom+MWIDTH,fim_y*zoom+MHEIGHT,3,255,0,0,255);
+	            	if (yneg)
+	            		thickLineRGBA(ren,inicio_x*zoom+MWIDTH,inicio_y*zoom+MHEIGHT,fim_x*zoom+MWIDTH,inicio_y*zoom+MHEIGHT,3,255,0,0,255);
+	            	if (ypos)
+	            		thickLineRGBA(ren,inicio_x*zoom+MWIDTH,fim_y*zoom+MHEIGHT,fim_x*zoom+MWIDTH,fim_y*zoom+MHEIGHT,3,255,0,0,255);
 					
 					//grade chao
 					if (grid) {
-						for (int m = -MWIDTH/zoom+100-(int)limitarDouble(-MWIDTH/zoom+local.x,100); m < MWIDTH/zoom; m+=100) {
+						for (int m = -MWIDTH/zoom+100-limitarInt(-MWIDTH/zoom+(int)local.x,100); m < MWIDTH/zoom; m+=100) {
 							lineRGBA(ren,m*zoom+MWIDTH,0,m*zoom+MWIDTH,HEIGHT,0,50,0,255);
 						}
-						for (int n = -MHEIGHT/zoom+100-(int)limitarDouble(-MHEIGHT/zoom+local.y,100); n < MHEIGHT/zoom; n+=100) {
+						for (int n = -MHEIGHT/zoom+100-limitarInt(-MHEIGHT/zoom+(int)local.y,100); n < MHEIGHT/zoom; n+=100) {
 							lineRGBA(ren,0,n*zoom+MHEIGHT,WIDTH,n*zoom+MHEIGHT,0,50,0,255);
 						}
 					}
@@ -776,12 +816,12 @@ int main(int argc, char* args[]) {
 	                
 					//DEBUG
 					if (debug) {
-						char * debuggers1[] = {"N Soldados:     %5.1lf",
-											  "N Particulas:   %5.1lf",
-											  "N BalasMetra:   %5.1lf",
-											  "N BalasSoldado: %5.1lf",
-											  "N Sangue:       %5.1lf",
-											  ""};
+						char * debuggers1[] = {"N Soldados:     %5.0lf",
+											   "N Particulas:   %5.0lf",
+											   "N BalasMetra:   %5.0lf",
+											   "N BalasSoldado: %5.0lf",
+											   "N Sangue:       %5.0lf",
+											   ""};
 						double debugData1[] = {nSoldados,
 											  nParticulas,
 											  nBalasMetra,
@@ -897,7 +937,23 @@ int main(int argc, char* args[]) {
 					}
 					//atualiza a posição do tanque e do ponteiro
 					SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
-					local = somar(local, deslocamento);
+					if (local.x+deslocamento.x > MAP_X_SIZE/2) {
+						local.x = MAP_X_SIZE/2;
+						velocidade = 0;
+					} else if (local.x+deslocamento.x < -MAP_X_SIZE/2) {
+						local.x = -MAP_X_SIZE/2;
+						velocidade = 0;
+					} else
+						local.x = local.x+deslocamento.x;
+						
+					if (local.y+deslocamento.y > MAP_Y_SIZE/2) {
+						local.y = MAP_Y_SIZE/2;
+						velocidade = 0;
+					} else if (local.y+deslocamento.y < -MAP_Y_SIZE/2) {
+						local.y = -MAP_Y_SIZE/2;
+						velocidade = 0;
+					} else
+						local.y = local.y+deslocamento.y;
 					
 					//atualiza a velocidade do tanque
 					if (velocidade > 0)

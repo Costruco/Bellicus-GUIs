@@ -35,6 +35,14 @@ double limitarDouble(double n, double limite) {
 	return n;
 }
 
+int limitarInt(int n, int limite) {
+	if (n > 0)
+		return n-n/limite*limite;
+	else if (n < 0)
+		return n-n/limite*limite+limite;
+	return n;
+}
+
 double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
 	double a = p1.x-p2.x, b = p1.y-p2.y;
 	return sqrt(a*a+b*b);
