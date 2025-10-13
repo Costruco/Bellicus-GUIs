@@ -13,10 +13,10 @@
 #include "interface.h"
 #include "menu.h"
 
-#define FPS 120
-#define TPF 1000/FPS
-
 // 1 metro = 32.5 pixels
+
+//o FPS � GLOBAL!
+int FPS = 120, TPF = 8;
 
 typedef struct terreno {
 	SDL_FPoint local;
@@ -217,12 +217,12 @@ int main(int argc, char* args[]) {
 			//valores do veiculo
 			int VELOCIDADE_TRANS_MAXIMA = 441,
 				VELOCIDADE_REV_MAXIMA = 88,
-				ACELERACAO_TRANS = 5,
-				ACELERACAO_REV = 3.5,
-				DESACELERACAO = 2.5;
+				ACELERACAO_TRANS = 600,
+				ACELERACAO_REV = 420,
+				DESACELERACAO = 300;
 			double velocidade = 0,
-				   VELOCIDADE_ANGULAR = 0.45,
-				   VELOCIDADE_TORRE = 0.25,
+				   VELOCIDADE_ANGULAR = 54,
+				   VELOCIDADE_TORRE = 30,
 				   TEMPO_DE_RECARGA = 1000,
 				   TEMPO_DE_RECARGA_METRA = 100,
 				   VELOCIDADE_DE_RECARGA = 1,
@@ -273,7 +273,7 @@ int main(int argc, char* args[]) {
 	            ultimoDisparoSoldado = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
 				ultimoSpawn = SDL_GetTicks(),
 				ultimaFumaca = SDL_GetTicks();
-				
+			
 			Uint32 espera = TPF;
 			SDL_Event evt;
 			
@@ -284,6 +284,8 @@ int main(int argc, char* args[]) {
 					mapa[i][j].y = rand()%3;
 				}
 			}
+			//medidor de FPS
+			int ticksPerFrame[10], nTicks = 0, ultimoFrame = SDL_GetTicks();
 			
 			while (gamerunning && apprunning) {
 				//recebe os inputs e atualiza o estado de movimentação do tanque
@@ -393,6 +395,17 @@ int main(int argc, char* args[]) {
 				//atualiza o frame
 				if (espera == 0) {
 					espera = TPF;
+					
+					//atualiza o FPS
+					ticksPerFrame[nTicks%10] = SDL_GetTicks()-ultimoFrame;
+					ultimoFrame = SDL_GetTicks();
+					nTicks++;
+					int soma = 0;
+					for (int i = 0; i < ((nTicks>10)?10:nTicks); i++) {
+						soma += ticksPerFrame[i];
+					}
+					FPS = 1000*((nTicks>10)?10:nTicks)/((soma!=0)?soma:1);
+					
 					//limpa a tela
 					SDL_RenderClear(ren);
 					
@@ -821,17 +834,19 @@ int main(int argc, char* args[]) {
 											   "N BalasMetra:   %5.0lf",
 											   "N BalasSoldado: %5.0lf",
 											   "N Sangue:       %5.0lf",
+											   "FPS:            %5.0lf",
 											   ""};
 						double debugData1[] = {nSoldados,
 											  nParticulas,
 											  nBalasMetra,
 											  nBalasSoldado,
-											  nSangue};
-						doubleDataLabel(ren,WIDTH-21*8-6,0,6,debuggers1,debugData1,NULL);
+											  nSangue,
+											  FPS};
+						doubleDataLabel(ren,WIDTH-21*8-6,0,7,debuggers1,debugData1,NULL);
 						
 						char estadoString[12];
 						stateToString(estadoString,estado);
-						stringDataLabel(ren,WIDTH-21*8-6,0,5,"Estado: %s",estadoString,NULL);
+						stringDataLabel(ren,WIDTH-21*8-6,0,6,"Estado: %s",estadoString,NULL);
 						
 						char string[12];
 						dataBox(ren,MWIDTH-11*4-3,0,11,1);
@@ -868,55 +883,55 @@ int main(int argc, char* args[]) {
 					if (estado == PONTO_MORTO) {
 						;		
 					} else if (estado == TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-							velocidade += ACELERACAO_TRANS;
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
+							velocidade += ACELERACAO_TRANS/FPS;
 						else
 							velocidade = VELOCIDADE_TRANS_MAXIMA;						
 					} else if (estado == ESQ_TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-							velocidade += ACELERACAO_TRANS;
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
+							velocidade += ACELERACAO_TRANS/FPS;
 						else
 							velocidade = VELOCIDADE_TRANS_MAXIMA;
-						angulo -= VELOCIDADE_ANGULAR;
-						angulo_arma -= VELOCIDADE_ANGULAR;
-						angulo_metra -= VELOCIDADE_ANGULAR;
+						angulo -= VELOCIDADE_ANGULAR/FPS;
+						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
+						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
 					} else if (estado == DIR_TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS)
-							velocidade += ACELERACAO_TRANS;
+						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
+							velocidade += ACELERACAO_TRANS/FPS;
 						else
 							velocidade = VELOCIDADE_TRANS_MAXIMA;
-						angulo += VELOCIDADE_ANGULAR;
-						angulo_arma += VELOCIDADE_ANGULAR;
-						angulo_metra += VELOCIDADE_ANGULAR;	
+						angulo += VELOCIDADE_ANGULAR/FPS;
+						angulo_arma += VELOCIDADE_ANGULAR/FPS;
+						angulo_metra += VELOCIDADE_ANGULAR/FPS;	
 					} else if (estado == REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-							velocidade -= ACELERACAO_REV;
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
+							velocidade -= ACELERACAO_REV/FPS;
 						else
 							velocidade = -VELOCIDADE_REV_MAXIMA;
 					} else if (estado == ESQ_REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-							velocidade -= ACELERACAO_REV;
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
+							velocidade -= ACELERACAO_REV/FPS;
 						else
 							velocidade = -VELOCIDADE_REV_MAXIMA;
-						angulo += VELOCIDADE_ANGULAR;
-						angulo_arma += VELOCIDADE_ANGULAR;
-						angulo_metra += VELOCIDADE_ANGULAR;		
+						angulo += VELOCIDADE_ANGULAR/FPS;
+						angulo_arma += VELOCIDADE_ANGULAR/FPS;
+						angulo_metra += VELOCIDADE_ANGULAR/FPS;		
 					} else if (estado == DIR_REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV)
-							velocidade -= ACELERACAO_REV;
+						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
+							velocidade -= ACELERACAO_REV/FPS;
 						else
 							velocidade = -VELOCIDADE_REV_MAXIMA;
-						angulo -= VELOCIDADE_ANGULAR;
-						angulo_arma -= VELOCIDADE_ANGULAR;
-						angulo_metra -= VELOCIDADE_ANGULAR;
+						angulo -= VELOCIDADE_ANGULAR/FPS;
+						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
+						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
 					} else if (estado == ESQ) {
-						angulo -= VELOCIDADE_ANGULAR;
-						angulo_arma -= VELOCIDADE_ANGULAR;
-						angulo_metra -= VELOCIDADE_ANGULAR;
+						angulo -= VELOCIDADE_ANGULAR/FPS;
+						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
+						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
 					} else if (estado == DIR) {
-						angulo += VELOCIDADE_ANGULAR;
-						angulo_arma += VELOCIDADE_ANGULAR;
-						angulo_metra += VELOCIDADE_ANGULAR;
+						angulo += VELOCIDADE_ANGULAR/FPS;
+						angulo_arma += VELOCIDADE_ANGULAR/FPS;
+						angulo_metra += VELOCIDADE_ANGULAR/FPS;
 					}
 					//atualiza os angulos
 					angulo_arma = limitarDouble(angulo_arma,360);
@@ -925,15 +940,15 @@ int main(int argc, char* args[]) {
 						
 					if (angulo_arma == angulo_alvo)
 						;
-					else if (angulo_arma+VELOCIDADE_TORRE > angulo_alvo && angulo_arma-VELOCIDADE_TORRE < angulo_alvo) {
+					else if (angulo_arma+VELOCIDADE_TORRE/FPS > angulo_alvo && angulo_arma-VELOCIDADE_TORRE/FPS < angulo_alvo) {
 						angulo_arma = angulo_alvo;
 					} else {
 						if (angulo_arma >= 180 && (limitarDouble(angulo_arma+180,360) > angulo_alvo || angulo_arma < angulo_alvo))
-							angulo_arma += VELOCIDADE_TORRE;
+							angulo_arma += VELOCIDADE_TORRE/FPS;
 						else if (limitarDouble(angulo_arma+180,360) > angulo_alvo && angulo_arma < angulo_alvo)
-							angulo_arma += VELOCIDADE_TORRE;
+							angulo_arma += VELOCIDADE_TORRE/FPS;
 						else
-							angulo_arma -= VELOCIDADE_TORRE;
+							angulo_arma -= VELOCIDADE_TORRE/FPS;
 					}
 					//atualiza a posição do tanque e do ponteiro
 					SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
@@ -957,9 +972,9 @@ int main(int argc, char* args[]) {
 					
 					//atualiza a velocidade do tanque
 					if (velocidade > 0)
-						velocidade = MAX(velocidade-DESACELERACAO, 0);
+						velocidade = MAX(velocidade-DESACELERACAO/FPS, 0);
 					else
-						velocidade = MIN(velocidade+DESACELERACAO, 0);
+						velocidade = MIN(velocidade+DESACELERACAO/FPS, 0);
 					
 					//nao exige explicações
 					SDL_RenderPresent(ren);
