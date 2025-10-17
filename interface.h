@@ -12,3 +12,4 @@ void doubleDataLabel(SDL_Renderer * ren, int x, int y, int nPalavras, char * str
 void stringDataLabel(SDL_Renderer * ren, int x, int y, int nLinhas, char * string, char * data, SDL_Color * cor);
 
 #endif
+

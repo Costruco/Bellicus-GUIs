@@ -179,32 +179,36 @@ int main(int argc, char* args[]) {
 	srand(SDL_GetTicks());
 	int apprunning = 1;
 	
+	//texturas tem que ser carregadas antes para o valor de aaliasing n�o ser alterado em runs consecutivas
+	//sprites
+	SDL_Texture * chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
+				* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
+				* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
+				* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
+                * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
+				* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
+				* municao_metralhadora = IMG_LoadTexture(ren, "./sprites/municao_metralhadora.png"),
+				* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
+				* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
+                * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png"),
+				* flash1 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_chassi.png"),
+				* flash2 = IMG_LoadTexture(ren, "./sprites/flash_cupola_chassi.png"),
+				* flash3 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_coaxial.png"),
+				* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
+                * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
+				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
+				
+	//sprites com aaliasing
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"linear");
+	SDL_Texture * chassiHD = IMG_LoadTexture(ren, "./sprites/chassi_com_sombra.png"),
+				* torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
+				* cupola = IMG_LoadTexture(ren, "./sprites/cupola_metralhadora_chassi.png"),
+				* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png");
+						
 	while (!SDL_QuitRequested() && apprunning) {
 		MenuOption escolha = menu_loop(ren, win, WIDTH, HEIGHT);
 		//MENU DO JOGO
 		if(escolha == MENU_PLAY){
-			//sprites
-			SDL_Texture * chassiHD = IMG_LoadTexture(ren, "./sprites/chassi_com_sombra.png"),
-						* chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
-					    * torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
-						* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
-						* cupola = IMG_LoadTexture(ren, "./sprites/cupola_metralhadora_chassi.png"),
-						* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png"),
-						* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
-						* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
-	                    * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
-						* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
-						* municao_metralhadora = IMG_LoadTexture(ren, "./sprites/municao_metralhadora.png"),
-						* explosao = IMG_LoadTexture(ren, "./sprites/explosao.png"),
-						* cratera = IMG_LoadTexture(ren, "./sprites/cratera.png"),
-	                    * sangue_arrasto = IMG_LoadTexture(ren, "./sprites/sangue_arrasto.png"),
-						* flash1 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_chassi.png"),
-						* flash2 = IMG_LoadTexture(ren, "./sprites/flash_cupola_chassi.png"),
-						* flash3 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_coaxial.png"),
-						* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
-	                    * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
-						* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
-			
 			//angulos e posições das lagartas
 			double angulo = 0, 
 				   angulo_arma = 0,
@@ -227,7 +231,7 @@ int main(int argc, char* args[]) {
 				   TEMPO_DE_RECARGA_METRA = 100,
 				   VELOCIDADE_DE_RECARGA = 1,
 				   VELOCIDADE_DE_RECARGA_METRA = 1,
-				   zoom = 0.9;	
+				   zoom = 0.8;	
 				
 			SDL_FPoint torre_offset = {19,0},
 					   metra_coaxial_offset = {42,7},
@@ -321,12 +325,14 @@ int main(int argc, char* args[]) {
 						else
 							estado = PONTO_MORTO;
 						
-						if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
+						
+						//controle do zoom, banido por Boris Demonik
+						/*if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
 							;
 						else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1)
 							zoom -= 0.05;
 						else if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0)
-							zoom += 0.05;
+							zoom += 0.05;*/
 							
 						if (tecP[SDL_SCANCODE_F3]) {
 							if (debug == 0)
@@ -572,6 +578,7 @@ int main(int argc, char* args[]) {
 							}
 						}
 					}
+					//barreira vermelha
 					if (xneg)
 	            		thickLineRGBA(ren,inicio_x*zoom+MWIDTH,inicio_y*zoom+MHEIGHT,inicio_x*zoom+MWIDTH,fim_y*zoom+MHEIGHT,3,255,0,0,255);
 	            	if (xpos)
@@ -638,8 +645,8 @@ int main(int argc, char* args[]) {
 	                		//coordenada fora dos limites superior e inferior da tela
 	                		coord = (SDL_FPoint){rand()%(WIDTH+201)-MWIDTH-100,rand()%2*(HEIGHT+201)-MHEIGHT-100};
 						} else {
-							coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
 							//coordenada fora dos limites esquerdo e direito da tela
+							coord = (SDL_FPoint){rand()%2*(WIDTH+201)-MWIDTH-100,rand()%(HEIGHT+201)-MHEIGHT-100};
 						}
 						coord = somar(coord,local);
 	                	for (s1 = 0; s1 < 5; s1++) {

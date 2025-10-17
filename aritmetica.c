@@ -5,6 +5,28 @@
 
 #include "aritmetica.h"
 
+int intPow(int a, int b) {
+	int pot = 1;
+	while (b-- != 0) {
+		pot*=a;
+	}
+	return pot;
+}
+
+int truncArr(double n, int nCasas) {
+	int teto = intPow(10,nCasas), resto = limitarInt(n,teto);
+	if (resto > teto/2)
+		return (int)n-resto+teto;
+	else if (resto < teto/2)
+		return (int)n-resto;
+	else {
+		if ((((int)n)/teto)%2 == 0)
+			return (int)n-resto+teto;
+		else
+			return (int)n-resto;
+	}		
+}
+
 int numeroDentroIntervalo(double n, double a, double b) {
 	return (n >= a && n <= b)?1:0;
 }
