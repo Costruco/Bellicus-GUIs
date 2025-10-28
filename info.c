@@ -1,10 +1,4 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-
-#include <stdio.h>
-#include <string.h>
-
-#include "interface.h"
+#include "info.h"
 	
 int stringFormatSize(char * string) {
 	int i = 0, n = 0, lendoFormato = 0, total = 0;

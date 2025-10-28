@@ -1,8 +1,11 @@
-#ifndef INTERFACE_H
-#define INTERFACE_H
+#ifndef INFO_H
+#define INFO_H
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+
+#include <stdio.h>
+#include <string.h>
 
 #include <stdio.h>
 

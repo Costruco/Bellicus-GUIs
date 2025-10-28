@@ -2,6 +2,10 @@
 #define QUADTREE_H
 
 #include <SDL2/SDL.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 #define CAPACIDADE_QT 4

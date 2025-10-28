@@ -2,15 +2,15 @@
 #define ARITMETICA_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 
-#define MAX(a,b) (a>b)?a:b
-#define MIN(a,b) (a<b)?a:b
+#include <math.h>
+
+
 #define MOD(a) (a>=0)?a:-a
 
 int intPow(int a, int b);
 int truncArr(double n, int nCasas);
-int numeroDentroIntervalo(double n, double a, double b);
-int anguloDentroIntervalo(double n, double a, double b);
 double graus(double radianos);
 double radianos(double angulo);
 double limitarDouble(double n, double limite);

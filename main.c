@@ -7,10 +7,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "aritmetica.h"
+#include "calc/aritmetica.h"
+#include "calc/logica.h"
+#include "calc/quadtree.h"
 #include "espera.h"
 #include "estados.h"
-#include "interface.h"
+#include "info.h"
 #include "menu.h"
 
 // 1 metro = 32.5 pixels

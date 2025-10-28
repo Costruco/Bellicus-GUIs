@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
 #include "quadtree.h"
-
 
 SDL_FPoint* novo_ponto(float x, float y){
     SDL_FPoint* ponto = (SDL_FPoint*)malloc(sizeof(SDL_FPoint));
