@@ -1,21 +1,39 @@
-MIT License
-
+Game License (Adapted from GNU GPL v3)
 Copyright (c) 2025 Costruco
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+All rights to this project — including source code, artwork, sounds, music, text, and any other assets — are reserved by the authors.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+You may view and study this code for educational or collaborative purposes only, provided that you:
+- Do not use it commercially;
+- Do not redistribute it without the authors’ explicit permission;
+- Do not modify it with the intent to publish, sell, or distribute derivative versions.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This project is protected under international copyright law and the GNU General Public License v3, with the following modifications specific to digital games:
+
+1. **Intellectual Property**
+   - All rights to the name, visual identity, characters, soundtrack, and any narrative elements belong exclusively to the original authors.
+   - No commercial usage rights are granted.
+
+2. **Source Code**
+   - The source code may be examined and studied.
+   - Any redistribution or modification requires that:
+     - The derived code maintains this same license;
+     - The original project and its authors are clearly credited;
+     - Prior written authorization is obtained for any public distribution.
+
+3. **Commercial Use**
+   - It is strictly prohibited to use, sell, license, or profit, directly or indirectly, from this project (or parts of it) without the authors’ permission.
+
+4. **Liability**
+   - The software is provided “as is,” without any warranty, express or implied.
+   - The authors shall not be held liable for any damages arising from the use of this software.
+
+5. **Contributions**
+   - By contributing code, art, music, or other content, the contributor agrees to license their contribution under the same terms as this license.
+
+For commercial use or redistribution requests, please contact:
+[Email or official website of the studio/team]
+
+Based on GNU General Public License v3 (https://www.gnu.org/licenses/gpl-3.0.html)
+Adapted for digital game projects.
+
