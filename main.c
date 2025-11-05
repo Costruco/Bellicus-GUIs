@@ -196,6 +196,7 @@ int main(int argc, char* args[]) {
 				* flash1 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_chassi.png"),
 				* flash2 = IMG_LoadTexture(ren, "./sprites/flash_cupola_chassi.png"),
 				* flash3 = IMG_LoadTexture(ren, "./sprites/flash_metralhadora_coaxial.png"),
+				* blast = IMG_LoadTexture(ren, "./sprites/blast.png"),
 				* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
                 * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
@@ -236,6 +237,7 @@ int main(int argc, char* args[]) {
 				   zoom = 0.8;	
 				
 			SDL_FPoint torre_offset = {19,0},
+					   ponta_do_canhao_offset = {100,0},
 					   metra_coaxial_offset = {42,7},
 					   metra_chassi_offset = {65,17},
 					   cupola_offset = {62,17},
@@ -329,12 +331,12 @@ int main(int argc, char* args[]) {
 						
 						
 						//controle do zoom, banido por Boris Demonik
-						/*if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
+						if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
 							;
 						else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1)
 							zoom -= 0.05;
 						else if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0)
-							zoom += 0.05;*/
+							zoom += 0.05;
 							
 						if (tecP[SDL_SCANCODE_F3]) {
 							if (debug == 0)
@@ -387,7 +389,7 @@ int main(int argc, char* args[]) {
 						//spawn de projeteis
 						if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
 							ultimoDisparo = SDL_GetTicks();
-							SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),mover(100,angulo_arma));
+							SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),rotacionar(zero,ponta_do_canhao_offset,angulo_arma));
 							projetil newbl = {ponta_do_canhao,
 											  distanciaEntrePontos(ponta_do_canhao,somar(local,escalonar((SDL_FPoint){mira_real.x-MWIDTH,mira_real.y-MHEIGHT},1/zoom))),
 											  0,
@@ -396,6 +398,14 @@ int main(int argc, char* args[]) {
 											  0,
 											  1};
 							hell[nBalas++] = newbl;
+							if (nParticulas < 300) {
+								particula newpart = {ponta_do_canhao,
+													 SDL_GetTicks(),
+													 500,
+													 5,
+													 0};
+								marcos[nParticulas++] = newpart;
+							}
 						}
 						break;
 					}
@@ -472,8 +482,15 @@ int main(int argc, char* args[]) {
 					SDL_FPoint centro_flash_1_relativo = somar(rotacionar(zero,escalonar(torre_offset,zoom),angulo),
 															   rotacionar(zero,escalonar(metra_coaxial_offset,zoom),angulo_arma));
 					SDL_FPoint centro_flash_1_absoluto = somar(centro_tanque,centro_flash_1_relativo);
-					SDL_FPoint base_flash_1 = somar(escalonar((SDL_FPoint){-16,-16},zoom),centro_flash_1_absoluto);;
-					SDL_FPoint centro_flash_1 = escalonar((SDL_FPoint){16,16},zoom);;
+					SDL_FPoint base_flash_1 = somar(escalonar((SDL_FPoint){-16,-16},zoom),centro_flash_1_absoluto);
+					SDL_FPoint centro_flash_1 = escalonar((SDL_FPoint){16,16},zoom);
+					
+					//blast canhao
+					SDL_FPoint centro_blast_relativo = somar(rotacionar(zero,escalonar(torre_offset,zoom),angulo),
+													   	     rotacionar(zero,escalonar(ponta_do_canhao_offset,zoom),angulo_arma));
+					SDL_FPoint centro_blast_absoluto = somar(centro_tanque,centro_blast_relativo);
+					SDL_FPoint base_blast = somar(escalonar((SDL_FPoint){0,-50},zoom),centro_blast_absoluto);
+					SDL_FPoint centro_blast = escalonar((SDL_FPoint){0,50},zoom);
 					
 					//metralhadora movel
 					SDL_FPoint ponta_da_metra_chassi;
@@ -825,7 +842,12 @@ int main(int argc, char* args[]) {
 								base = (SDL_FRect){base_flash_1.x,base_flash_1.y,33*zoom,33*zoom};
 								SDL_RenderCopyExF(ren,flash3,NULL,&base,angulo_arma,&centro_flash_1,SDL_FLIP_NONE);
 								break;
-								
+							case 5:
+								estagio = (int)(tempo_vivo/100);
+								recorte = (SDL_Rect){180*estagio,0,180,100};
+								base = (SDL_FRect){base_blast.x, base_blast.y,180*zoom,100*zoom};
+								SDL_RenderCopyExF(ren,blast,&recorte,&base,angulo_arma,&centro_blast,SDL_FLIP_NONE);
+								break;
 						}
 					}
 					
