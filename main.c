@@ -399,9 +399,9 @@ int main(int argc, char* args[]) {
 											  1};
 							hell[nBalas++] = newbl;
 							if (nParticulas < 300) {
-								particula newpart = {ponta_do_canhao,
+								particula newpart = {somar(ponta_do_canhao,local),
 													 SDL_GetTicks(),
-													 500,
+													 400,
 													 5,
 													 0};
 								marcos[nParticulas++] = newpart;
@@ -439,14 +439,14 @@ int main(int argc, char* args[]) {
 					if (SDL_GetTicks()-ultimaFumaca > esperaPorFumaca && nParticulas < 299) {
 						ultimaFumaca = SDL_GetTicks();
 						SDL_FPoint vento = mover(rand()%13,angulo+180-10+rand()%21);
-						particula newpart = {somar(centro_ex1_absoluto,(SDL_FPoint){vento.x,vento.y}),
+						particula newpart = {somar(centro_ex1_absoluto,vento),
 											 SDL_GetTicks(),
 											 200,
 											 3,
 											 0};
 						marcos[nParticulas++] = newpart;
 						vento = (SDL_FPoint) mover(rand()%13,angulo+180-10+rand()%21);
-						newpart = (particula){somar(centro_ex2_absoluto,(SDL_FPoint){vento.x,vento.y}),
+						newpart = (particula){somar(centro_ex2_absoluto,vento),
 								   SDL_GetTicks(),
 								   200,
 								   3,
@@ -489,8 +489,8 @@ int main(int argc, char* args[]) {
 					SDL_FPoint centro_blast_relativo = somar(rotacionar(zero,escalonar(torre_offset,zoom),angulo),
 													   	     rotacionar(zero,escalonar(ponta_do_canhao_offset,zoom),angulo_arma));
 					SDL_FPoint centro_blast_absoluto = somar(centro_tanque,centro_blast_relativo);
-					SDL_FPoint base_blast = somar(escalonar((SDL_FPoint){0,-50},zoom),centro_blast_absoluto);
-					SDL_FPoint centro_blast = escalonar((SDL_FPoint){0,50},zoom);
+					SDL_FPoint base_blast = somar(escalonar((SDL_FPoint){0,-90},zoom),centro_blast_absoluto);
+					SDL_FPoint centro_blast = escalonar((SDL_FPoint){0,90},zoom);
 					
 					//metralhadora movel
 					SDL_FPoint ponta_da_metra_chassi;
@@ -843,9 +843,8 @@ int main(int argc, char* args[]) {
 								SDL_RenderCopyExF(ren,flash3,NULL,&base,angulo_arma,&centro_flash_1,SDL_FLIP_NONE);
 								break;
 							case 5:
-								estagio = (int)(tempo_vivo/100);
-								recorte = (SDL_Rect){180*estagio,0,180,100};
-								base = (SDL_FRect){base_blast.x, base_blast.y,180*zoom,100*zoom};
+								recorte = (SDL_Rect){180*(int)((tempo_vivo%80)/16),180*(int)(tempo_vivo/80),180,180};
+								base = (SDL_FRect){base_blast.x, base_blast.y,180*zoom,180*zoom};
 								SDL_RenderCopyExF(ren,blast,&recorte,&base,angulo_arma,&centro_blast,SDL_FLIP_NONE);
 								break;
 						}
