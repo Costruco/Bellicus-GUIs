@@ -167,6 +167,19 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
 }
 
+bool estaDentro(edges, xp, yp){
+    //algoritmo pra checar se o ponto xp,yp esta dentro de um poligono usando raytracing 
+    int ct=0;
+    for(int i =0;i<edges; i++){
+        //definir x1,y1 x2,y2 de cada canto
+        if((yp<y1)!=(yp<y2) && xp<x1 + ((yp-y1)/(y2-y1))*(x2-x1)){
+            ct++;        
+        }       
+    }
+    return ct%2==1;
+
+}
+
 int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
