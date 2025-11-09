@@ -167,11 +167,16 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
 }
 
-bool estaDentro(edges, xp, yp){
+bool estaDentro(int edges, float xp, float yp){
     //algoritmo pra checar se o ponto xp,yp esta dentro de um poligono usando raytracing 
     int ct=0;
     for(int i =0;i<edges; i++){
         //definir x1,y1 x2,y2 de cada canto
+        float x1,y1,x2,y2 ;
+        x1=0;
+        x2=0;
+        y1=0;
+        y2=0;
         if((yp<y1)!=(yp<y2) && xp<x1 + ((yp-y1)/(y2-y1))*(x2-x1)){
             ct++;        
         }       
@@ -212,6 +217,7 @@ int main(int argc, char* args[]) {
 				* blast = IMG_LoadTexture(ren, "./sprites/blast.png"),
 				* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
                 * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
+                * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
 				
 	//sprites com aaliasing
@@ -716,6 +722,9 @@ int main(int argc, char* args[]) {
 					SDL_FRect base_metralhadora = {base_metra.x,base_metra.y,14*zoom,8*zoom};
 					SDL_RenderCopyExF(ren,metralhadora_chassi,NULL,&base_metralhadora,angulo_metra,&centro_metra,SDL_FLIP_NONE);
 					
+                    SDL_FRect bv = {0,0,1400,700};
+                    SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);    
+                    
 					//flash da metralhadora
 					for (int p1 = 0; p1 < nParticulas; p1++) {
 						int tempo_vivo = SDL_GetTicks()-marcos[p1].nascimento;
