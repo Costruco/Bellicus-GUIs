@@ -1,7 +1,9 @@
 #include "logica.h"
 
 int numeroDentroIntervalo(double n, double a, double b) {
-	return (n >= a && n <= b)?1:0;
+	if (a < b)
+		return (n >= a && n <= b)?1:0;
+	return !(n >= a && n <= b)?1:0;
 }
 
 int anguloDentroIntervalo(double n, double a, double b) {

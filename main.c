@@ -8,6 +8,7 @@
 #include <math.h>
 
 #include "calc/aritmetica.h"
+#include "calc/colisoes.h"
 #include "calc/logica.h"
 #include "calc/quadtree.h"
 #include "espera.h"
@@ -165,24 +166,6 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 	SDL_Rect recorte = {32*sd1.variacao,0,32,32};
 	SDL_FRect base = {(sd1.local.x-16-local.x)*escala+ctela.x,(sd1.local.y-16-local.y)*escala+ctela.y,32*escala,32*escala};
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,sd1.angulo,NULL,SDL_FLIP_NONE);
-}
-
-bool estaDentro(int edges, float xp, float yp){
-    //algoritmo pra checar se o ponto xp,yp esta dentro de um poligono usando raytracing 
-    int ct=0;
-    for(int i =0;i<edges; i++){
-        //definir x1,y1 x2,y2 de cada canto
-        float x1,y1,x2,y2 ;
-        x1=0;
-        x2=0;
-        y1=0;
-        y2=0;
-        if((yp<y1)!=(yp<y2) && xp<x1 + ((yp-y1)/(y2-y1))*(x2-x1)){
-            ct++;        
-        }       
-    }
-    return ct%2==1;
-
 }
 
 int main(int argc, char* args[]) {
@@ -902,7 +885,12 @@ int main(int argc, char* args[]) {
 						
 						char string[12];
 						dataBox(ren,MWIDTH-11*4-3,0,11,1);
-						sprintf(string,"%d %d %d %d %d %d",tecP[SDL_SCANCODE_W],tecP[SDL_SCANCODE_A],tecP[SDL_SCANCODE_S],tecP[SDL_SCANCODE_D],tecP[SDL_SCANCODE_KP_PLUS],tecP[SDL_SCANCODE_KP_MINUS]);
+						sprintf(string,"%d %d %d %d %d %d",tecP[SDL_SCANCODE_W],
+														   tecP[SDL_SCANCODE_A],
+														   tecP[SDL_SCANCODE_S],
+														   tecP[SDL_SCANCODE_D],
+														   tecP[SDL_SCANCODE_KP_PLUS],
+														   tecP[SDL_SCANCODE_KP_MINUS]);
 						stringRGBA(ren,MWIDTH-11*4,3,string,255,255,255,255);
 					}
 					
