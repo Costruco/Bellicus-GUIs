@@ -49,18 +49,18 @@ int checarColisaoPoligonoPoligono(poligono plg1, poligono plg2, double angulo) {
 	return 0;
 }
 
-int checarColisao(poligono p1, poligono p2, double angulo) {
+int checarColisao(poligono p1, poligono p2, SDL_FPoint local1, SDL_FPoint local2, double angulo) {
 	if (p1.n == 0 && p2.n == 0)
-		return checarColisaoPontoPonto(p1,p2);
+		return checarColisaoPontoPonto(somar(p1,local1),somar(p2,local2));
 	else if (p1.n == 0 && p1.n == 1)
-		return checarColisaoPontoCirculo(p1.centro,p2);
+		return checarColisaoPontoCirculo(somar(p1.centro,local1),somar(p2,local2));
 	else if (p1.n == 0)
-		return checarColisaoPontoPoligono(p1.centro,p2,angulo);
+		return checarColisaoPontoPoligono(somar(p1.centro,local1),somar(p2,local2),angulo);
 	else if (p1.n == 1 && p1.n == 1)
-		return checarColisaoCirculoCirculo(p1,p2);
+		return checarColisaoCirculoCirculo(somar(p1,local1),somar(p2,local2));
 	else if (p1.n == 1)
-		return checarColisaoCirculoPoligono(p1,p2);
+		return checarColisaoCirculoPoligono(somar(p1,local1),somar(p2,local2));
 	else
-		return checarColisaoPoligonoPoligono(p1,p2,angulo);
+		return checarColisaoPoligonoPoligono(somar(p1,local1),somar(p2,local2),angulo);
 }
 
