@@ -608,7 +608,7 @@ int main(int argc, char* args[]) {
 							//coordenada dos pontos da grade
 							if (debug && grid && zoom >= 0.7) {
 								circleRGBA(ren,m*zoom+MWIDTH,n*zoom+MHEIGHT,5,0,0,255,255);
-								char string[30];
+								char string[64];
 								sprintf(string,"%d",m+(int)local.x);
 								stringRGBA(ren,m*zoom+MWIDTH+5,n*zoom+MHEIGHT+5,string,255,255,255,255);
 								sprintf(string,"%d",n+(int)local.y);
@@ -721,9 +721,7 @@ int main(int argc, char* args[]) {
 					//metralhadora do chassi
 					SDL_FRect base_metralhadora = {base_metra.x,base_metra.y,14*zoom,8*zoom};
 					SDL_RenderCopyExF(ren,metralhadora_chassi,NULL,&base_metralhadora,angulo_metra,&centro_metra,SDL_FLIP_NONE);
-					
-                    SDL_FRect bv = {0,0,1400,700};
-                    SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);    
+    
                     
 					//flash da metralhadora
 					for (int p1 = 0; p1 < nParticulas; p1++) {
@@ -896,11 +894,11 @@ int main(int argc, char* args[]) {
 											  FPS};
 						doubleDataLabel(ren,WIDTH-21*8-6,0,7,debuggers1,debugData1,NULL);
 						
-						char estadoString[12];
+						char estadoString[64];
 						stateToString(estadoString,estado);
 						stringDataLabel(ren,WIDTH-21*8-6,0,6,"Estado: %s",estadoString,NULL);
 						
-						char string[12];
+						char string[64];
 						dataBox(ren,MWIDTH-11*4-3,0,11,1);
 						sprintf(string,"%d %d %d %d %d %d",tecP[SDL_SCANCODE_W],tecP[SDL_SCANCODE_A],tecP[SDL_SCANCODE_S],tecP[SDL_SCANCODE_D],tecP[SDL_SCANCODE_KP_PLUS],tecP[SDL_SCANCODE_KP_MINUS]);
 						stringRGBA(ren,MWIDTH-11*4,3,string,255,255,255,255);
@@ -930,7 +928,10 @@ int main(int argc, char* args[]) {
 					double infoTorre[] = {angulo_arma,
 										  angulo_alvo};
 					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
+					//barra de vida
 					
+                    SDL_FRect bv = {0,0,1400,700};
+                    SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {
 						;		
