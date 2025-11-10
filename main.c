@@ -236,7 +236,7 @@ int main(int argc, char* args[]) {
 				   TEMPO_DE_RECARGA_METRA = 100,
 				   VELOCIDADE_DE_RECARGA = 1,
 				   VELOCIDADE_DE_RECARGA_METRA = 1,
-				   zoom = 0.8;	
+				   zoom = 0.8;
 				
 			SDL_FPoint torre_offset = {19,0},
 					   ponta_do_canhao_offset = {100,0},
