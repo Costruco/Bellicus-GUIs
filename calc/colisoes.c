@@ -5,7 +5,7 @@ int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2) {
 		return 0;
 	if (p.x >= MAX(r1.x,r2.x))
 		return 0;
-	if (p.x =< MIN(r1.x,r2.x))
+	if (p.x <= MIN(r1.x,r2.x))
 		return 1;
 	double lim = r1.x+(r2.y-r1.y)/(r2.x-r1.x)*(p.x-r1.x);
 	return (lim >= 0)?(p.y >= lim):(p.y <= lim);
@@ -24,7 +24,7 @@ int checarColisaoPontoCirculo(SDL_FPoint pnt, poligono cir, SDL_FPoint local2) {
 int checarColisaoPontoPoligono(SDL_FPoint pnt, poligono plg, SDL_FPoint local2, double angulo) {
 	int count = 0;
 	for (int i = 0; i < plg.n; i++) {
-		count+=antesDaReta(rotacionar(somar(plg.centro,local2),pnt,angulo),somar(plg.vertices[i],local2),somar(plg.vertices[(i+1)%n],local2));
+		count+=antesDaReta(rotacionar(somar(plg.centro,local2),pnt,angulo),somar(plg.vertices[i],local2),somar(plg.vertices[(i+1)%plg.n],local2));
 	}
 	return count%2;
 }
@@ -42,7 +42,7 @@ int checarColisaoCirculoPoligono(poligono cir, poligono plg, SDL_FPoint local1, 
 }
 
 int checarColisaoPoligonoPoligono(poligono plg1, poligono plg2, SDL_FPoint local1, SDL_FPoint local2, double angulo) {
-	for (int i = 0; i < plg.n; i++) {
+	for (int i = 0; i < plg1.n; i++) {
 		if (checarColisaoPontoPoligono(somar(plg1.vertices[i],local1),plg2,local2,angulo))
 			return 1;
 	}

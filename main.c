@@ -201,6 +201,7 @@ int main(int argc, char* args[]) {
 				* fumaca = IMG_LoadTexture(ren, "./sprites/fumaca.png"),
                 * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
                 * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
+                * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
 				
 	//sprites com aaliasing
@@ -917,9 +918,11 @@ int main(int argc, char* args[]) {
 										  angulo_alvo};
 					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
 					//barra de vida
-					
-                    SDL_FRect bv = {0,0,1400,700};
+                    SDL_FRect fv = {500,20,400,60};
+                    SDL_RenderCopyExF(ren,fundovida,NULL,&fv,0,NULL,SDL_FLIP_NONE); 					
+                    SDL_FRect bv = {500,20,400,60};
                     SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);
+   
 					//atualiza a velocidade e direção do movimento do tanque com base no estado
 					if (estado == PONTO_MORTO) {
 						;		
