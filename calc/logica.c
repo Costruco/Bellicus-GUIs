@@ -3,7 +3,7 @@
 int numeroDentroIntervalo(double n, double a, double b) {
 	if (a < b)
 		return (n >= a && n <= b)?1:0;
-	return !(n >= a && n <= b)?1:0;
+	return (n >= b && n <= a)?1:0;
 }
 
 int anguloDentroIntervalo(double n, double a, double b) {
