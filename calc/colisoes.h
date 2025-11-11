@@ -9,7 +9,7 @@
 typedef struct poligono {
 	int n;
 	SDL_FPoint centro;
-	SDL_FPoint vertices[];
+	SDL_FPoint * vertices;
 } poligono;
 
 int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2);
