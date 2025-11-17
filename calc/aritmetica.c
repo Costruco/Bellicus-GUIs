@@ -8,6 +8,19 @@ int intPow(int a, int b) {
 	return pot;
 }
 
+void swap(int * a, int * b) {
+	int aux = *a;
+	*a = *b;
+	*b = aux;
+}
+
+
+void swapF(float * a, float * b) {
+	float aux = *a;
+	*a = *b;
+	*b = aux;
+}
+
 int truncArr(double n, int nCasas) {
 	int teto = intPow(10,nCasas), resto = limitarInt(n,teto);
 	if (resto > teto/2)

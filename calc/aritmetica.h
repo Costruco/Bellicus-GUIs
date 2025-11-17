@@ -6,10 +6,11 @@
 
 #include <math.h>
 
-
 #define MOD(a) (a>=0)?a:-a
 
 int intPow(int a, int b);
+void swap(int * a, int * b);
+void swapF(float * a, float * b);
 int truncArr(double n, int nCasas);
 double graus(double radianos);
 double radianos(double angulo);

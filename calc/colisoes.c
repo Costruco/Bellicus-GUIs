@@ -3,16 +3,11 @@
 int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2) {
 	if (!numeroDentroIntervalo(p.y,r1.y,r2.y))
 		return 0;
-	if (p.x >= MAX(r1.x,r2.x))
-		return 0;
-	if (p.x <= MIN(r1.x,r2.x))
-		return 1;
-	double lim = r1.x+(r2.y-r1.y)/(r2.x-r1.x)*(p.x-r1.x);
-	return (lim >= 0)?(p.y >= lim):(p.y <= lim);
+	return p.x < r1.x+(p.y-r1.y)/(r2.y-r1.y)*(r2.x-r1.x);
 }
 
 int checarColisaoPontoPonto(SDL_FPoint p1, SDL_FPoint p2) {
-	if (p1.x == p2.x && p1.y == p2.y)
+	if (numeroDentroIntervalo(p1.x-p2.x,-0.1,0.1) && numeroDentroIntervalo(p1.y-p2.y,-0.1,0.1))
 		return 1;
 	return 0;
 }
@@ -33,10 +28,13 @@ int checarColisaoCirculoCirculo(poligono cir1, poligono cir2, SDL_FPoint local1,
 	return distanciaEntrePontos(somar(cir1.centro,local1), somar(cir2.centro,local2)) <= cir1.vertices[0].x+cir2.vertices[0].x;
 }
 
-int checarColisaoCirculoPoligono(poligono cir, poligono plg, SDL_FPoint local1, SDL_FPoint local2) {
+int checarColisaoCirculoPoligono(poligono cir, poligono plg, SDL_FPoint local1, SDL_FPoint local2, double angulo) {
+	if (checarColisaoPontoPoligono(cir.centro,plg,local2,angulo))
+		return 1;
 	for (int i = 0; i < plg.n; i++) {
 		if (distanciaEntrePontos(somar(cir.centro,local1), somar(plg.vertices[i],local2)) <= cir.vertices[0].x)
 			return 1;
+			
 	}
 	return 0;
 }
@@ -50,17 +48,33 @@ int checarColisaoPoligonoPoligono(poligono plg1, poligono plg2, SDL_FPoint local
 }
 
 int checarColisao(poligono p1, poligono p2, SDL_FPoint local1, SDL_FPoint local2, double angulo) {
-	if (p1.n == 0 && p2.n == 0)
+	if (p1.n == 0 && p2.n == 0) {
 		return checarColisaoPontoPonto(somar(p1.centro,local1),somar(p2.centro,local2));
-	else if (p1.n == 0 && p1.n == 1)
-		return checarColisaoPontoCirculo(somar(p1.centro,local1),p2,local2);
-	else if (p1.n == 0)
-		return checarColisaoPontoPoligono(somar(p1.centro,local1),p2,local2,angulo);
-	else if (p1.n == 1 && p1.n == 1)
+		
+	} else if (p1.n+p2.n == 1) {
+		if (p1.n == 0)
+			return checarColisaoPontoCirculo(somar(p1.centro,local1),p2,local2);
+		else
+			return checarColisaoPontoCirculo(somar(p2.centro,local2),p1,local1);
+			
+	} else if (p1.n+p2.n >= 2 && p1.n*p2.n == 0) {
+		if (p1.n == 0)
+			return checarColisaoPontoPoligono(somar(p1.centro,local1),p2,local2,angulo);
+		else
+			return checarColisaoPontoPoligono(somar(p2.centro,local2),p1,local1,angulo);
+			
+	} else if (p1.n*p2.n == 1) {
 		return checarColisaoCirculoCirculo(p1,p2,local1,local2);
-	else if (p1.n == 1)
-		return checarColisaoCirculoPoligono(p1,p2,local1,local2);
-	else
+		
+	} else if (p1.n*p2.n < p1.n+p2.n) {
+		if (p1.n == 1)
+			return checarColisaoCirculoPoligono(p1,p2,local1,local2,angulo);
+		else
+			return checarColisaoCirculoPoligono(p2,p1,local2,local1,angulo);
+			
+	} else {
 		return checarColisaoPoligonoPoligono(p1,p2,local1,local2,angulo);
+		
+	}
 }
 

@@ -19,6 +19,17 @@
 // 1 metro = 32.5 pixels
 
 //o FPS é GLOBAL!
+
+//caixas de colisão
+SDL_FPoint vertices_tanque[] = {{-90,-50},{+90,-50},{+90,+50},{-90,+50}},
+		   vertices_soldado[] = {{-16,-16},{+16,-16},{+16,+16},{-16,+16}};
+			poligono hitbox_tanque = {4,
+										 {0,0},
+										 vertices_tanque},
+					 hitbox_soldado = {4,
+					                      {0,0},
+										  vertices_soldado};
+										  
 int FPS = 120, TPF = 8;
 
 typedef struct terreno {
@@ -77,16 +88,16 @@ void renderizarProjetil(SDL_Renderer * ren, SDL_Texture * textura, projetil bl1,
 	SDL_Rect recorte;
 	SDL_FRect base;
 	
-	if (bl1.tipo == 0 ){
+	if (bl1.tipo == 0 ) {
 		recorte = (SDL_Rect){9*bl1.variacao,0,9,2};
 		base = (SDL_FRect){(bl1.local.x-4.5-local.x)*escala+ctela.x,(bl1.local.y-1-local.y)*escala+ctela.y,9*escala,2*escala};
-	} else if(bl1.tipo==1){
+	} else if (bl1.tipo==1) {
 		recorte = (SDL_Rect){50*bl1.variacao,0,50,1};
 		base = (SDL_FRect){(bl1.local.x-25-local.x)*escala+ctela.x,(bl1.local.y-0.5-local.y)*escala+ctela.y,50*escala,1*escala};
 	}
-    else{
-            recorte = (SDL_Rect){0,0,4,4};
-		    base = (SDL_FRect){(bl1.local.x-2-local.x)*escala+ctela.x,(bl1.local.y-2-local.y)*escala+ctela.y,4*escala,4*escala};    
+    else {
+        recorte = (SDL_Rect){0,0,4,4};
+	    base = (SDL_FRect){(bl1.local.x-2-local.x)*escala+ctela.x,(bl1.local.y-2-local.y)*escala+ctela.y,4*escala,4*escala};    
     }
 	
 	SDL_RenderCopyExF(ren,textura,&recorte,&base,bl1.angulo,NULL,SDL_FLIP_NONE);
@@ -122,17 +133,19 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 	}
 }
 
-int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue) {
+int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue, SDL_Renderer * ren) {
 	if (batalhao[i].vida == 0) {
 		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
 	}
+	if (checarColisao(hitbox_soldado,hitbox_tanque,batalhao[i].local,local,angulo)) {
+	/*
 	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
 	if (!numeroDentroIntervalo(normal.x-local.x,-97,97))
 		return 0;
 	if (!numeroDentroIntervalo(normal.y-local.y,-48,48))
 		return 0;
-    
+    */
 	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},
 					     angulo+180,
 						 velocidade};
@@ -140,6 +153,7 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
     
 	batalhao[i] = batalhao[--(*nSoldados)];
 	return 1;
+	}
 }
 
 int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
@@ -287,6 +301,8 @@ int main(int argc, char* args[]) {
 			
 			Uint32 espera = TPF;
 			SDL_Event evt;
+			
+			//
 			
 			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
@@ -497,6 +513,8 @@ int main(int argc, char* args[]) {
 					
 					//metralhadora movel
 					SDL_FPoint ponta_da_metra_chassi;
+					//
+					/*
 					if(SDL_GetTicks()-ultimoDisparoMetraChassi >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
 						ponta_da_metra_chassi = somar(somar(local, rotacionar(zero, metra_chassi_offset, angulo)), mover(14, angulo_metra));
 						
@@ -539,6 +557,8 @@ int main(int argc, char* args[]) {
 							}
 						}
 					}
+					*/
+					//
 					
 	                //tiros soldados
 	                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
@@ -683,7 +703,7 @@ int main(int argc, char* args[]) {
 						}
 					}
 					for (s1 = 0; s1 < nSoldados; s1++) {
-						if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue)) {
+						if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue,ren)) {
 							continue;
 						}
 						atualizarPosicaoSoldado(&batalhao[s1],local);
