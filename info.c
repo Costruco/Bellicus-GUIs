@@ -42,39 +42,52 @@ void dataBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas) {
 }
 
 void doubleDataLabel(SDL_Renderer * ren, int x, int y, int nPalavras, char * strings[], double data[], SDL_Color cores[]) {
-	int max_nLetras = 0, nLinhas = nPalavras;
-	for (int i = 0; i < nPalavras; i++) {
-		int new_max = stringFormatSize(strings[i]);
-		if (new_max > max_nLetras) {
-			max_nLetras = new_max;
-		}
-		if (strings[i][strlen(strings[i])-1] == '-')
-			nLinhas--;
-	}
-	dataBox(ren,x,y,max_nLetras,nLinhas);
-	for (int i = 0, wc = 0; wc < nPalavras; i++, wc++) {
-		int concat = 0;
-		if (strings[wc][strlen(strings[wc])-1] == '-') {
-			concat = 1;
-		}
-		char newString[strlen(strings[wc])+1];
-		sprintf(newString,strings[wc],data[wc]);
-		if (concat)
-			newString[strlen(newString)-1] = ' ';
-		if (cores != NULL)
-			stringRGBA(ren,x+3,y+3+i*11,newString,cores[wc].r,cores[wc].g,cores[wc].b,cores[wc].a);
-		else
-			stringRGBA(ren,x+3,y+3+i*11,newString,255,255,255,255);
-		i -= concat;
-	}
+    int max_nLetras = 0, nLinhas = nPalavras;
+    for (int i = 0; i < nPalavras; i++) {
+        size_t len = strlen(strings[i]);
+        int new_max = stringFormatSize(strings[i]);
+        if (new_max > max_nLetras) max_nLetras = new_max;
+        if (len > 0 && strings[i][len-1] == '-')
+            nLinhas--;
+    }
+
+    if (nLinhas < 1) nLinhas = 1;
+    dataBox(ren, x, y, max_nLetras, nLinhas);
+
+    for (int i = 0, wc = 0; wc < nPalavras; wc++) {
+        size_t slen = strlen(strings[wc]);
+        if (slen == 0) {
+            i++;
+            continue;
+        }
+
+        int concat = 0;
+        if (strings[wc][slen - 1] == '-') concat = 1;
+
+        char newString[256];
+        int written = snprintf(newString, sizeof(newString), strings[wc], data[wc]);
+
+        if (concat && written > 0) {
+            size_t nslen = strlen(newString);
+            if (nslen > 0) newString[nslen - 1] = ' ';
+        }
+
+        if (cores != NULL)
+            stringRGBA(ren, x+3, y+3 + i*11, newString, cores[wc].r, cores[wc].g, cores[wc].b, cores[wc].a);
+        else
+            stringRGBA(ren, x+3, y+3 + i*11, newString, 255,255,255,255);
+
+        i -= concat; 
+        i++;
+    }
 }
 
 void stringDataLabel(SDL_Renderer * ren, int x, int y, int nLinhas, char * string, char * data, SDL_Color * cor) {
-	char newString[strlen(string)+1];
-	sprintf(newString,string,data);
-	if (cor != NULL)
-		stringRGBA(ren,x+3,y+3+nLinhas*11,newString,cor->r,cor->g,cor->b,cor->a);
-	else
-		stringRGBA(ren,x+3,y+3+nLinhas*11,newString,255,255,255,255);
+    char newString[256];
+    snprintf(newString, sizeof(newString), string, data);
+    if (cor != NULL)
+        stringRGBA(ren, x+3, y+3+nLinhas*11, newString, cor->r, cor->g, cor->b, cor->a);
+    else
+        stringRGBA(ren, x+3, y+3+nLinhas*11, newString, 255,255,255,255);
 }
 
