@@ -216,6 +216,7 @@ int main(int argc, char* args[]) {
                 * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
                 * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
                 * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
+                * morte = IMG_LoadTexture(ren,"./img/morte.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
 				
 	//sprites com aaliasing
@@ -301,6 +302,7 @@ int main(int argc, char* args[]) {
 			
 			Uint32 espera = TPF;
 			SDL_Event evt;
+            float vidaTanque=100;
 			
 			//
 			
@@ -665,7 +667,7 @@ int main(int argc, char* args[]) {
 						SDL_Rect recorte = {0,0,60,50};
 						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
 												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/250:1)*60*zoom,
 												 50*zoom};
 						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 					}
@@ -673,7 +675,7 @@ int main(int argc, char* args[]) {
 						SDL_Rect recorte = {60,0,60,50};
 						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
 												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/250:1)*60*zoom,
 												 50*zoom};
 						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 					}
@@ -808,6 +810,9 @@ int main(int argc, char* args[]) {
 	                	atualizarPosicaoProjetil(&bala[b3]);
 	                	renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
 	                	int bala_fora = (bala[b3].distanciaAlvo <= 0);
+                        if(checarColisaoPontoPoligono(bala[b3].local, hitbox_tanque, local, bala[b3].angulo)){
+                            vidaTanque= vidaTanque - 0.1;
+                        }
 						if(bala_fora && bala[b3].tipo == 2){
 							bala[b3] = bala[--nBalasSoldado];
 	        				b3--;
@@ -938,7 +943,7 @@ int main(int argc, char* args[]) {
 										  angulo_alvo};
 					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
 					//barra de vida
-                    SDL_FRect fv = {500,20,400,60};
+                    SDL_FRect fv = {500,20,400*vidaTanque/100,60};
                     SDL_RenderCopyExF(ren,fundovida,NULL,&fv,0,NULL,SDL_FLIP_NONE); 					
                     SDL_FRect bv = {500,20,400,60};
                     SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);
@@ -1039,11 +1044,17 @@ int main(int argc, char* args[]) {
 						velocidade = MAX(velocidade-DESACELERACAO/FPS, 0);
 					else
 						velocidade = MIN(velocidade+DESACELERACAO/FPS, 0);
-					
+					if(vidaTanque<=0){
+                        SDL_FRect mt = {0,0,WIDTH,HEIGHT};
+                        SDL_RenderCopyExF(ren,morte,NULL,&mt,0,NULL,SDL_FLIP_NONE);
+                        
+                    }
 					//nao exige explicações
 					SDL_RenderPresent(ren);
+                    
 				}
 			}
+        
 		} else if (escolha == MENU_TUTORIAL) {
 			printf("Tutorial iniciado!");
 		} else if (escolha == MENU_CREDITS) {
