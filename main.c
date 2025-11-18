@@ -18,9 +18,9 @@
 
 // 1 metro = 32.5 pixels
 
-//o FPS é GLOBAL!
+//o FPS ï¿½ GLOBAL!
 
-//caixas de colisão
+//caixas de colisï¿½o
 SDL_FPoint vertices_tanque[] = {{-90,-50},{+90,-50},{+90,+50},{-90,+50}},
 		   vertices_soldado[] = {{-16,-16},{+16,-16},{+16,+16},{-16,+16}};
 			poligono hitbox_tanque = {4,
@@ -31,6 +31,13 @@ SDL_FPoint vertices_tanque[] = {{-90,-50},{+90,-50},{+90,+50},{-90,+50}},
 										  vertices_soldado};
 										  
 int FPS = 120, TPF = 8;
+
+enum {JOGO_VIVO, JOGO_MORTO};
+int estado_jogo = JOGO_VIVO;
+float fade_morte = 0.0f;
+float zoom_morte = 0.3f;
+int flash_alpha = 255;
+Uint32 tempo_morte = 0;
 
 typedef struct terreno {
 	SDL_FPoint local;
@@ -64,6 +71,47 @@ typedef struct projetil {
 	int tipo;
 	int variacao;	
 } projetil;
+
+void desenhar_tela_de_morte(SDL_Renderer *ren,
+                            SDL_Texture *tex_morte,
+                            int width,
+                            int height)
+{
+    if (flash_alpha > 0) {
+        SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(ren, 255, 255, 255, flash_alpha);
+        SDL_RenderFillRect(ren, NULL);
+        flash_alpha -= 5;
+        if (flash_alpha < 0) flash_alpha = 0;
+		return;
+    }
+
+    SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(ren, 0, 0, 0, 180);
+    SDL_FRect overlay = {0, 0, (float)width, (float)height};
+    SDL_RenderFillRectF(ren, &overlay);
+
+    if (fade_morte < 255) fade_morte += 2;
+    if (zoom_morte < 1.0f) zoom_morte += 0.005f;
+
+    float pulsar = 0.7f + 0.3f * sin(SDL_GetTicks() * 0.004f);
+    Uint8 alpha_final = (Uint8)(fade_morte * pulsar);
+
+    SDL_SetTextureAlphaMod(tex_morte, alpha_final);
+
+    SDL_FRect dst = {
+        (width  - width  * zoom_morte) / 2,
+        (height - height * zoom_morte) / 2,
+        width  * zoom_morte,
+        height * zoom_morte
+    };
+
+    SDL_RenderCopyExF(ren, tex_morte, NULL, &dst, 0, NULL, SDL_FLIP_NONE);
+
+}
+
+
+
 
 void atualizarPosicaoProjetil(projetil * bl1) {
 	SDL_FPoint ptdt = mover(bl1->velocidade/FPS,bl1->angulo);
@@ -196,7 +244,7 @@ int main(int argc, char* args[]) {
 	srand(SDL_GetTicks());
 	int apprunning = 1;
 	
-	//texturas tem que ser carregadas antes para o valor de aaliasing não ser alterado em runs consecutivas
+	//texturas tem que ser carregadas antes para o valor de aaliasing nï¿½o ser alterado em runs consecutivas
 	//sprites
 	SDL_Texture * chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
 				* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
@@ -216,6 +264,7 @@ int main(int argc, char* args[]) {
                 * municao_soldado = IMG_LoadTexture(ren, "./sprites/balaSoldado.png"),
                 * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
                 * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
+                * morte = IMG_LoadTexture(ren,"./img/morte.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
 				
 	//sprites com aaliasing
@@ -301,8 +350,7 @@ int main(int argc, char* args[]) {
 			
 			Uint32 espera = TPF;
 			SDL_Event evt;
-			
-			//
+            float vidaTanque=100;
 			
 			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
@@ -665,7 +713,7 @@ int main(int argc, char* args[]) {
 						SDL_Rect recorte = {0,0,60,50};
 						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
 												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/250:1)*60*zoom,
 												 50*zoom};
 						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 					}
@@ -673,7 +721,7 @@ int main(int argc, char* args[]) {
 						SDL_Rect recorte = {60,0,60,50};
 						SDL_FRect base_sangue = {(sangue[t1].local.x-local.x-30)*zoom+MWIDTH,
 												 (sangue[t1].local.y-local.y-25)*zoom+MHEIGHT,
-												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/200:1)*60*zoom,
+												 ((sangue[t1].velocidade>200)?sangue[t1].velocidade/250:1)*60*zoom,
 												 50*zoom};
 						SDL_RenderCopyExF(ren,sangue_arrasto,&recorte,&base_sangue,sangue[t1].angulo,NULL,SDL_FLIP_NONE);
 					}
@@ -808,6 +856,9 @@ int main(int argc, char* args[]) {
 	                	atualizarPosicaoProjetil(&bala[b3]);
 	                	renderizarProjetil(ren,municao_soldado, bala[b3], local, centro_tanque, zoom);
 	                	int bala_fora = (bala[b3].distanciaAlvo <= 0);
+                        if(checarColisaoPontoPoligono(bala[b3].local, hitbox_tanque, local, bala[b3].angulo)){
+                            vidaTanque= vidaTanque - 0.1;
+                        }
 						if(bala_fora && bala[b3].tipo == 2){
 							bala[b3] = bala[--nBalasSoldado];
 	        				b3--;
@@ -938,7 +989,7 @@ int main(int argc, char* args[]) {
 										  angulo_alvo};
 					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
 					//barra de vida
-                    SDL_FRect fv = {500,20,400,60};
+                    SDL_FRect fv = {500,20,400*vidaTanque/100,60};
                     SDL_RenderCopyExF(ren,fundovida,NULL,&fv,0,NULL,SDL_FLIP_NONE); 					
                     SDL_FRect bv = {500,20,400,60};
                     SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);
@@ -1039,11 +1090,23 @@ int main(int argc, char* args[]) {
 						velocidade = MAX(velocidade-DESACELERACAO/FPS, 0);
 					else
 						velocidade = MIN(velocidade+DESACELERACAO/FPS, 0);
-					
+					if (vidaTanque <= 0 && estado_jogo == JOGO_VIVO) {
+						estado_jogo = JOGO_MORTO;
+						fade_morte = 0.0f;
+						zoom_morte = 0.3f;
+						flash_alpha = 255;
+						tempo_morte = SDL_GetTicks();
+					}
+					if(estado_jogo == JOGO_MORTO){
+						desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
+					}
+
 					//nao exige explicaÃ§Ãµes
 					SDL_RenderPresent(ren);
+                    
 				}
 			}
+        
 		} else if (escolha == MENU_TUTORIAL) {
 			printf("Tutorial iniciado!");
 		} else if (escolha == MENU_CREDITS) {
