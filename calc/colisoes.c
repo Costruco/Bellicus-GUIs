@@ -29,10 +29,12 @@ int checarColisaoCirculoCirculo(poligono cir1, poligono cir2, SDL_FPoint local1,
 }
 
 int checarColisaoCirculoPoligono(poligono cir, poligono plg, SDL_FPoint local1, SDL_FPoint local2, double angulo) {
-	if (checarColisaoPontoPoligono(cir.centro,plg,local2,angulo))
+	if (checarColisaoPontoPoligono(somar(cir.centro,local1),plg,local2,angulo))
 		return 1;
 	for (int i = 0; i < plg.n; i++) {
-		if (distanciaEntrePontos(somar(cir.centro,local1), somar(plg.vertices[i],local2)) <= cir.vertices[0].x)
+		if (distanciaEntrePontos(pontoProx(rotacionar(somar(plg.centro,local2),somar(cir.centro,local1),angulo),
+								 		   somar(plg.vertices[i],local2),
+								 		   somar(plg.vertices[(i+1)%plg.n],local2)),rotacionar(somar(plg.centro,local2),somar(cir.centro,local1),angulo)) <= cir.vertices[0].x)
 			return 1;
 			
 	}

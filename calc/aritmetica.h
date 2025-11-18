@@ -18,10 +18,13 @@ double limitarDouble(double n, double limite);
 int limitarInt(int n, int limite);
 double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2);
 double anguloEntrePontos(SDL_FPoint p1, SDL_FPoint p2);
+double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2);
 SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2);
+SDL_FPoint sub(SDL_FPoint p1, SDL_FPoint p2);
 SDL_FPoint escalonar(SDL_FPoint p1, double escala);
 SDL_FPoint mover(double velocidade, double angulo);
 SDL_FPoint rotacionar(SDL_FPoint o1, SDL_FPoint p1, double angulo);
+SDL_FPoint pontoProx(SDL_FPoint p, SDL_FPoint a, SDL_FPoint b);
 
 #endif
 

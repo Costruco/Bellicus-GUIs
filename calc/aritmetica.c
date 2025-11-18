@@ -74,19 +74,20 @@ double anguloEntrePontos(SDL_FPoint p1, SDL_FPoint p2) {
 	return limitarDouble(angulo,360);
 }
 
-SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
-	SDL_FPoint soma = {p1.x+p2.x, p1.y+p2.y}; 
-	return soma;
+double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2) {
+	return p1.x*p2.x+p1.y*p2.y;
 }
 
-SDL_FPoint subtrair(SDL_FPoint p1, SDL_FPoint p2){
-	SDL_FPoint sub = {p1.x-p2.x, p1.y-p2.y};
-	return sub;
+SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
+	return (SDL_FPoint){p1.x+p2.x, p1.y+p2.y};
+}
+
+SDL_FPoint sub(SDL_FPoint p1, SDL_FPoint p2){
+	return (SDL_FPoint){p1.x-p2.x, p1.y-p2.y};
 }
 
 SDL_FPoint escalonar(SDL_FPoint p1, double escala) {
-	SDL_FPoint produto = {p1.x*escala,p1.y*escala};
-	return produto;
+	return (SDL_FPoint){p1.x*escala,p1.y*escala};
 }
 
 SDL_FPoint mover(double velocidade, double angulo) {
@@ -98,5 +99,16 @@ SDL_FPoint rotacionar(SDL_FPoint o1, SDL_FPoint p1, double angulo) {
 	SDL_FPoint newp = {(p1.x-o1.x)*cos(radianos(angulo)) - (p1.y-o1.y)*sin(radianos(angulo)) + o1.x,
 	                  (p1.x-o1.x)*sin(radianos(angulo)) + (p1.y-o1.y)*cos(radianos(angulo)) + o1.y};
 	return newp;
+}
+
+SDL_FPoint pontoProx(SDL_FPoint p, SDL_FPoint a, SDL_FPoint b) {
+	SDL_FPoint v = sub(b,a), u = sub(a,p);
+	double t = -produtoEscalar(v,u)/produtoEscalar(v,v);
+	if (numeroDentroIntervalo(t,0,1))
+		return somar(escalonar(a,1-t),escalonar(b,t));
+	else if (distanciaEntrePontos(p,a) < distanciaEntrePontos(p,b))
+		return a;
+	else
+		return b;
 }
 
