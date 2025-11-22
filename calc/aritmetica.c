@@ -1,4 +1,5 @@
 #include "aritmetica.h"
+#include "logica.h"
 
 int intPow(int a, int b) {
 	int pot = 1;
