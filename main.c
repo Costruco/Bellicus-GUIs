@@ -18,20 +18,29 @@
 
 // 1 metro = 32.5 pixels
 
-//o FPS � GLOBAL!
+//velocidades
+SDL_FPoint velocidades[] = {{-65,0},
+ 						    {0,0},
+							{0,65},
+							{65,135},
+							{135,225},
+							{225,487}};
 
 //caixas de colis�o
 SDL_FPoint vertices_tanque[] = {{-90,-50},{+90,-50},{+90,+50},{-90,+50}},
 		   vertices_soldado[] = {{-16,-16},{+16,-16},{+16,+16},{-16,+16}};
-			poligono hitbox_tanque = {4,
-										 {0,0},
-										 vertices_tanque},
-					 hitbox_soldado = {4,
-					                      {0,0},
-										  vertices_soldado};
-										  
+		   
+poligono hitbox_tanque = {4,
+						  {0,0},
+						  vertices_tanque},
+	     hitbox_soldado = {4,
+	                       {0,0},
+						   vertices_soldado};
+
+//o FPS � GLOBAL!										  
 int FPS = 120, TPF = 8;
 
+//Tela de morte
 enum {JOGO_VIVO, JOGO_MORTO};
 int estado_jogo = JOGO_VIVO;
 float fade_morte = 0.0f;
@@ -294,11 +303,9 @@ int main(int argc, char* args[]) {
 			SDL_Color branco = {255,255,255,255};
 			
 			//valores do veiculo
-			int VELOCIDADE_TRANS_MAXIMA = 441,
-				VELOCIDADE_REV_MAXIMA = 88,
-				ACELERACAO_TRANS = 600,
-				ACELERACAO_REV = 420,
-				DESACELERACAO = 300;
+			int POTENCIA = 372800,
+				MASSA = 32400,
+				FRENAGEM = 94000;
 			double velocidade = 0,
 				   VELOCIDADE_ANGULAR = 54,
 				   VELOCIDADE_TORRE = 30,
@@ -306,6 +313,8 @@ int main(int argc, char* args[]) {
 				   TEMPO_DE_RECARGA_METRA = 100,
 				   VELOCIDADE_DE_RECARGA = 1,
 				   VELOCIDADE_DE_RECARGA_METRA = 1,
+				   VELOCIDADE_DE_TROCA_DE_MARCHA = 1,
+				   ATRITO = 0.3,
 				   zoom = 0.8;
 				
 			SDL_FPoint torre_offset = {19,0},
@@ -339,7 +348,9 @@ int main(int argc, char* args[]) {
 			
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
-			movimento estado = PONTO_MORTO;
+			Direcao direcao = RETO;
+			Marcha marcha = PONTO_MORTO;
+			Movimento movimento = NULO;
 			int seed = rand(),
 				gamerunning = 1,
 				debug = 0,
@@ -352,11 +363,15 @@ int main(int argc, char* args[]) {
 				ultimoDisparoMetraCoaxial = SDL_GetTicks()-TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA,
 	            ultimoDisparoSoldado = SDL_GetTicks()-TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA,
 				ultimoSpawn = SDL_GetTicks(),
-				ultimaFumaca = SDL_GetTicks();
+				ultimaFumaca = SDL_GetTicks(),
+				reduzindo = 0, passando = 0,
+				inicioDaTroca;
 			
 			Uint32 espera = TPF;
 			SDL_Event evt;
-            float vidaTanque=100;
+			
+			int HEALTH_BAR_SIZE = 10000;
+            float vidaTanque = 10000;
 			
 			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
@@ -372,122 +387,108 @@ int main(int argc, char* args[]) {
 				//recebe os inputs e atualiza o estado de movimentação do tanque
 				int isevt = AUX_WaitEventTimeoutCount(&evt, &espera);
 				if (isevt) {
-					int esq_nao_dir = (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D]),
-						dir_nao_esq = (!tecP[SDL_SCANCODE_A] && tecP[SDL_SCANCODE_D]);
 					switch (evt.type) {	
-					case SDL_KEYDOWN:
-					case SDL_KEYUP:
-						if (tecP[SDL_SCANCODE_ESCAPE]) {
+						case SDL_KEYDOWN:
+						case SDL_KEYUP:
+							if (tecP[SDL_SCANCODE_ESCAPE]) {
+								gamerunning = 0;
+							}
+	
+							if (estado_jogo == JOGO_MORTO) {
+	                    		break; 
+	                		}
+	
+							if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S])
+								movimento = TRANSV;
+							else if (tecP[SDL_SCANCODE_S] && !tecP[SDL_SCANCODE_W])
+								movimento = REV;
+							else
+								movimento = NULO;
+								
+							if (tecP[SDL_SCANCODE_A] && !tecP[SDL_SCANCODE_D])
+								direcao = ESQ;
+							else if (!tecP[SDL_SCANCODE_A] && tecP[SDL_SCANCODE_D])
+								direcao = DIR;
+							else
+								direcao = RETO;
+							
+							//controle do zoom, banido por Boris Demonik
+							if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
+								;
+							else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1)
+								zoom -= 0.05;
+							else if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0)
+								zoom += 0.05;
+								
+							if (tecP[SDL_SCANCODE_F3]) {
+								if (debug == 0)
+									debug = 1;
+								else
+									debug = 0;
+							}
+							if (tecP[SDL_SCANCODE_G]) {
+								if (grid == 0)
+									grid = 1;
+								else
+									grid = 0;
+							}						
+							if (tecP[SDL_SCANCODE_SPACE]) {
+								//spawn de projetil de metralhadora
+								if (SDL_GetTicks()-ultimoDisparoMetraCoaxial >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA && nBalasMetra < 100) {
+									ultimoDisparoMetraCoaxial = SDL_GetTicks();
+									SDL_FPoint ponta_da_metra_coaxial = somar(somar(local,
+																					rotacionar(zero,torre_offset,angulo)),
+																			  rotacionar(zero,metra_coaxial_offset,angulo_arma));
+									projetil newtiro = {ponta_da_metra_coaxial,
+														3000,
+														0,
+														angulo_arma-2+rand()%3,
+														2000,
+														1,
+														0};
+									bullet[nBalasMetra++] = newtiro;
+									if (nParticulas < 300) {
+										particula newpart = {zero,
+														     SDL_GetTicks(),
+														     16,
+														     4,
+															 0};
+										marcos[nParticulas++] = newpart;
+									}
+								}
+							}
+							break;
+						case SDL_QUIT:
 							gamerunning = 0;
-						}
-
-						if (estado_jogo == JOGO_MORTO) {
-                    		break; 
-                		}
-
-						if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
-							if (esq_nao_dir)
-								estado = ESQ_TRANSV;
-							else if (dir_nao_esq)
-								estado = DIR_TRANSV;
-							else
-								estado = TRANSV;
-								
-						} else if (tecP[SDL_SCANCODE_S] && !tecP[SDL_SCANCODE_W]) {
-							if (esq_nao_dir)
-								estado = ESQ_REV;
-							else if (dir_nao_esq)
-								estado = DIR_REV;
-							else
-								estado = REV;
-								
-						} else if (esq_nao_dir)
-							estado = ESQ;	
-								
-						else if (dir_nao_esq)
-							estado = DIR;	
-							
-						else
-							estado = PONTO_MORTO;
-						
-						
-						//controle do zoom, banido por Boris Demonik
-						if (tecP[SDL_SCANCODE_KP_PLUS] && tecP[SDL_SCANCODE_KP_MINUS])
-							;
-						else if (tecP[SDL_SCANCODE_KP_MINUS] && zoom > 0.1)
-							zoom -= 0.05;
-						else if (tecP[SDL_SCANCODE_KP_PLUS] && zoom < 3.0)
-							zoom += 0.05;
-							
-						if (tecP[SDL_SCANCODE_F3]) {
-							if (debug == 0)
-								debug = 1;
-							else
-								debug = 0;
-						}
-						if (tecP[SDL_SCANCODE_G]) {
-							if (grid == 0)
-								grid = 1;
-							else
-								grid = 0;
-						}						
-						if (tecP[SDL_SCANCODE_SPACE]) {
-							//spawn de projetil de metralhadora
-							if (SDL_GetTicks()-ultimoDisparoMetraCoaxial >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA && nBalasMetra < 100) {
-								ultimoDisparoMetraCoaxial = SDL_GetTicks();
-								SDL_FPoint ponta_da_metra_coaxial = somar(somar(local,
-																				rotacionar(zero,torre_offset,angulo)),
-																		  rotacionar(zero,metra_coaxial_offset,angulo_arma));
-								projetil newtiro = {ponta_da_metra_coaxial,
-													3000,
-													0,
-													angulo_arma-2+rand()%3,
-													2000,
-													1,
-													0};
-								bullet[nBalasMetra++] = newtiro;
+							apprunning = 0;
+							break;
+						case SDL_MOUSEMOTION:
+							SDL_GetMouseState(&mx,&my);
+							break;
+						case SDL_MOUSEBUTTONDOWN:
+							if(estado_jogo == JOGO_MORTO) break;
+							//spawn de projeteis
+							if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
+								ultimoDisparo = SDL_GetTicks();
+								SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),rotacionar(zero,ponta_do_canhao_offset,angulo_arma));
+								projetil newbl = {ponta_do_canhao,
+												  distanciaEntrePontos(ponta_do_canhao,somar(local,escalonar((SDL_FPoint){mira_real.x-MWIDTH,mira_real.y-MHEIGHT},1/zoom))),
+												  0,
+												  angulo_arma,
+												  3000,
+												  0,
+												  1};
+								hell[nBalas++] = newbl;
 								if (nParticulas < 300) {
-									particula newpart = {zero,
-													     SDL_GetTicks(),
-													     16,
-													     4,
+									particula newpart = {somar(ponta_do_canhao,local),
+														 SDL_GetTicks(),
+														 400,
+														 5,
 														 0};
 									marcos[nParticulas++] = newpart;
 								}
 							}
-						}
-						break;
-					case SDL_QUIT:
-						gamerunning = 0;
-						apprunning = 0;
-						break;
-					case SDL_MOUSEMOTION:
-						SDL_GetMouseState(&mx,&my);
-						break;
-					case SDL_MOUSEBUTTONDOWN:
-						if(estado_jogo == JOGO_MORTO) break;
-						//spawn de projeteis
-						if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
-							ultimoDisparo = SDL_GetTicks();
-							SDL_FPoint ponta_do_canhao = somar(somar(local,rotacionar(zero,torre_offset,angulo)),rotacionar(zero,ponta_do_canhao_offset,angulo_arma));
-							projetil newbl = {ponta_do_canhao,
-											  distanciaEntrePontos(ponta_do_canhao,somar(local,escalonar((SDL_FPoint){mira_real.x-MWIDTH,mira_real.y-MHEIGHT},1/zoom))),
-											  0,
-											  angulo_arma,
-											  3000,
-											  0,
-											  1};
-							hell[nBalas++] = newbl;
-							if (nParticulas < 300) {
-								particula newpart = {somar(ponta_do_canhao,local),
-													 SDL_GetTicks(),
-													 400,
-													 5,
-													 0};
-								marcos[nParticulas++] = newpart;
-							}
-						}
-						break;
+							break;
 					}
 				}
 				if (estado_jogo == JOGO_MORTO) {
@@ -959,6 +960,9 @@ int main(int argc, char* args[]) {
 											   "N BalasSoldado: %5.0lf",
 											   "N Sangue:       %5.0lf",
 											   "FPS:            %5.0lf",
+											   "",
+											   "",
+											   "",
 											   ""};
 						double debugData1[] = {nSoldados,
 											  nParticulas,
@@ -966,11 +970,17 @@ int main(int argc, char* args[]) {
 											  nBalasSoldado,
 											  nSangue,
 											  FPS};
-						doubleDataLabel(ren,WIDTH-21*8-6,0,7,debuggers1,debugData1,NULL);
+						doubleDataLabel(ren,WIDTH-21*8-6,0,9,debuggers1,debugData1,NULL);
 						
-						char estadoString[64];
-						stateToString(estadoString,estado);
-						stringDataLabel(ren,WIDTH-21*8-6,0,6,"Estado: %s",estadoString,NULL);
+						char marchaString[64],
+							 movimentoString[64],
+							 direcaoString[64];
+						marchaToString(marchaString,marcha);
+						movimentoToString(movimentoString,movimento);
+						direcaoToString(direcaoString,direcao);
+						stringDataLabel(ren,WIDTH-21*8-6,0,6,"Marcha: %s",marchaString,NULL);
+						stringDataLabel(ren,WIDTH-21*8-6,0,7,"Movimento: %s",movimentoString,NULL);
+						stringDataLabel(ren,WIDTH-21*8-6,0,8,"Direcao: %s",direcaoString,NULL);
 						
 						char string[64];
 						dataBox(ren,MWIDTH-11*4-3,0,11,1);
@@ -993,7 +1003,7 @@ int main(int argc, char* args[]) {
 										   -local.y,
 										   angulo,
 										   0,
-										   velocidade*1.2/10};
+										   velocidade/32.5*3.6};
 					SDL_Color coresChassi[] = {branco,
 											   branco,
 											   branco,
@@ -1006,67 +1016,81 @@ int main(int argc, char* args[]) {
 											  "angulo alvo:     %6.2lf"};
 					double infoTorre[] = {angulo_arma,
 										  angulo_alvo};
-					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);		
+					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);
+							
 					//barra de vida
-                    SDL_FRect fv = {500,20,400*vidaTanque/100,60};
+                    SDL_FRect fv = {500,20,400*vidaTanque/HEALTH_BAR_SIZE,60};
                     SDL_RenderCopyExF(ren,fundovida,NULL,&fv,0,NULL,SDL_FLIP_NONE); 					
                     SDL_FRect bv = {500,20,400,60};
                     SDL_RenderCopyExF(ren,vidatanque,NULL,&bv,0,NULL,SDL_FLIP_NONE);
    
-					//atualiza a velocidade e direção do movimento do tanque com base no estado
-					if (estado == PONTO_MORTO) {
-						;		
-					} else if (estado == TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
-							velocidade += ACELERACAO_TRANS/FPS;
-						else
-							velocidade = VELOCIDADE_TRANS_MAXIMA;						
-					} else if (estado == ESQ_TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
-							velocidade += ACELERACAO_TRANS/FPS;
-						else
-							velocidade = VELOCIDADE_TRANS_MAXIMA;
-						angulo -= VELOCIDADE_ANGULAR/FPS;
-						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
-						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
-					} else if (estado == DIR_TRANSV) {
-						if (velocidade < VELOCIDADE_TRANS_MAXIMA-ACELERACAO_TRANS/FPS)
-							velocidade += ACELERACAO_TRANS/FPS;
-						else
-							velocidade = VELOCIDADE_TRANS_MAXIMA;
-						angulo += VELOCIDADE_ANGULAR/FPS;
-						angulo_arma += VELOCIDADE_ANGULAR/FPS;
-						angulo_metra += VELOCIDADE_ANGULAR/FPS;	
-					} else if (estado == REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
-							velocidade -= ACELERACAO_REV/FPS;
-						else
-							velocidade = -VELOCIDADE_REV_MAXIMA;
-					} else if (estado == ESQ_REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
-							velocidade -= ACELERACAO_REV/FPS;
-						else
-							velocidade = -VELOCIDADE_REV_MAXIMA;
-						angulo += VELOCIDADE_ANGULAR/FPS;
-						angulo_arma += VELOCIDADE_ANGULAR/FPS;
-						angulo_metra += VELOCIDADE_ANGULAR/FPS;		
-					} else if (estado == DIR_REV) {
-						if (velocidade > -VELOCIDADE_REV_MAXIMA+ACELERACAO_REV/FPS)
-							velocidade -= ACELERACAO_REV/FPS;
-						else
-							velocidade = -VELOCIDADE_REV_MAXIMA;
-						angulo -= VELOCIDADE_ANGULAR/FPS;
-						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
-						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
-					} else if (estado == ESQ) {
-						angulo -= VELOCIDADE_ANGULAR/FPS;
-						angulo_arma -= VELOCIDADE_ANGULAR/FPS;
-						angulo_metra -= VELOCIDADE_ANGULAR/FPS;
-					} else if (estado == DIR) {
-						angulo += VELOCIDADE_ANGULAR/FPS;
-						angulo_arma += VELOCIDADE_ANGULAR/FPS;
-						angulo_metra += VELOCIDADE_ANGULAR/FPS;
+					//atualiza a marcha do tanque com base na marcha atual, velocidade e controle
+					if (marcha == PONTO_MORTO) {
+						if (aproxIgual(velocidade,velocidades[marcha].y) && passando == 0 && movimento == TRANSV) {
+							inicioDaTroca = SDL_GetTicks();
+							passando = 1;
+						} else if (aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0 && movimento == REV) {
+							inicioDaTroca = SDL_GetTicks();
+							reduzindo = 1;
+						}
+					} else {
+						if (marcha != QUARTA && aproxIgual(velocidade,velocidades[marcha].y) && passando == 0) {
+							inicioDaTroca = SDL_GetTicks();
+							passando = 1;
+						} else if (marcha != RE && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0){
+							inicioDaTroca = SDL_GetTicks();
+							reduzindo = 1;
+						}
 					}
+					
+					if (passando == 1 && SDL_GetTicks()-inicioDaTroca >= 200*VELOCIDADE_DE_TROCA_DE_MARCHA) {
+						marcha = MIN(marcha+1,QUARTA);
+						passando = 0;
+					} else if (reduzindo == 1 && SDL_GetTicks()-inicioDaTroca >= 200*VELOCIDADE_DE_TROCA_DE_MARCHA) {
+						marcha = MAX(marcha-1,RE);
+						reduzindo = 0;
+					}
+					
+					//acelera ou desacelera o veiculo com base na marcha atual, velocidade e controle
+					if (passando != 1 && reduzindo != 1) {
+						if (velocidade < 0) {
+							if (movimento == NULO)
+								velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+							else if (movimento == TRANSV)
+								velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+							else if (movimento == REV)
+								velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
+						} else if (velocidade == 0) {
+							if (movimento == TRANSV)
+								velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
+							else if (movimento == REV)
+								velocidade = MIN(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
+						} else if (velocidade > 0){
+							if (movimento == NULO)
+								velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+							else if (movimento == TRANSV)
+								velocidade = MIN(velocidades[marcha].y,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
+							else if (movimento == REV)
+								velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+						}
+					}
+				
+					//atualiza o angulo do veiculo com base nos controles
+					switch (direcao) {
+						case RETO:
+							break;
+						case ESQ:
+							angulo -= VELOCIDADE_ANGULAR/FPS;
+							angulo_arma -= VELOCIDADE_ANGULAR/FPS;
+							angulo_metra -= VELOCIDADE_ANGULAR/FPS;	
+							break;
+						case DIR:
+							angulo += VELOCIDADE_ANGULAR/FPS;
+							angulo_arma += VELOCIDADE_ANGULAR/FPS;
+							angulo_metra += VELOCIDADE_ANGULAR/FPS;
+							break;	
+					}
+					
 					//atualiza os angulos
 					angulo_arma = limitarDouble(angulo_arma,360);
 					angulo = limitarDouble(angulo,360);
@@ -1084,31 +1108,31 @@ int main(int argc, char* args[]) {
 						else
 							angulo_arma -= VELOCIDADE_TORRE/FPS;
 					}
+
 					//atualiza a posição do tanque e do ponteiro
 					SDL_FPoint deslocamento = mover(velocidade/FPS,angulo);
 					if (local.x+deslocamento.x > MAP_X_SIZE/2) {
 						local.x = MAP_X_SIZE/2;
 						velocidade = 0;
+						marcha = PONTO_MORTO;
 					} else if (local.x+deslocamento.x < -MAP_X_SIZE/2) {
 						local.x = -MAP_X_SIZE/2;
 						velocidade = 0;
+						marcha = PONTO_MORTO;
 					} else
 						local.x = local.x+deslocamento.x;
 						
 					if (local.y+deslocamento.y > MAP_Y_SIZE/2) {
 						local.y = MAP_Y_SIZE/2;
 						velocidade = 0;
+						marcha = PONTO_MORTO;
 					} else if (local.y+deslocamento.y < -MAP_Y_SIZE/2) {
 						local.y = -MAP_Y_SIZE/2;
 						velocidade = 0;
+						marcha = PONTO_MORTO;
 					} else
 						local.y = local.y+deslocamento.y;
 					
-					//atualiza a velocidade do tanque
-					if (velocidade > 0)
-						velocidade = MAX(velocidade-DESACELERACAO/FPS, 0);
-					else
-						velocidade = MIN(velocidade+DESACELERACAO/FPS, 0);
 					if (vidaTanque <= 0 && estado_jogo == JOGO_VIVO) {
 						estado_jogo = JOGO_MORTO;
 						fade_morte = 0.0f;
@@ -1118,15 +1142,11 @@ int main(int argc, char* args[]) {
 					}
 
 					if(estado_jogo == JOGO_MORTO){
-						desenhar_tela_de_morte(ren,morte,WIDTH,HEIGHT);
-						
+						desenhar_tela_de_morte(ren,morte,WIDTH,HEIGHT);		
 					}
-
-					
-					
+				
 					//nao exige explicações
 					SDL_RenderPresent(ren);
-                    
 				}
 			}
         

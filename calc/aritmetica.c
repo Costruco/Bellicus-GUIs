@@ -1,5 +1,4 @@
 #include "aritmetica.h"
-#include "logica.h"
 
 int intPow(int a, int b) {
 	int pot = 1;
@@ -81,9 +80,9 @@ double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2) {
 
 double aceleracao(double velocidade, double massa, double potencia, double atrito) {
 	velocidade = velocidade/32.5;
-	if (velocidade >= 0 && velocidade <= potencia/(GRAVIDADE*atrito*massa))
+	if (numeroDentroIntervalo(velocidade,0,potencia/(GRAVIDADE*atrito*massa)))
 		return GRAVIDADE*atrito*32.5;
-	else if (velocidade >= -potencia/(GRAVIDADE*atrito*massa) && velocidade <= 0)
+	else if (numeroDentroIntervalo(velocidade,-potencia/(GRAVIDADE*atrito*massa),0))
 		return -GRAVIDADE*atrito*32.5;
 	else
 		return potencia/(massa*velocidade)*32.5;
