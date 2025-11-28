@@ -278,6 +278,12 @@ int main(int argc, char* args[]) {
 		MenuOption escolha = menu_loop(ren, win, WIDTH, HEIGHT);
 		//MENU DO JOGO
 		if(escolha == MENU_PLAY){
+			estado_jogo = JOGO_VIVO;
+			//variaveis padrão da tela de morte 
+			fade_morte = 0;
+			zoom_morte = 0.3f;
+			flash_alpha = 0;
+			tempo_morte = 0;
 			//angulos e posições das lagartas
 			double angulo = 0, 
 				   angulo_arma = 0,
@@ -371,6 +377,14 @@ int main(int argc, char* args[]) {
 					switch (evt.type) {	
 					case SDL_KEYDOWN:
 					case SDL_KEYUP:
+						if (tecP[SDL_SCANCODE_ESCAPE]) {
+							gamerunning = 0;
+						}
+
+						if (estado_jogo == JOGO_MORTO) {
+                    		break; 
+                		}
+
 						if (tecP[SDL_SCANCODE_W] && !tecP[SDL_SCANCODE_S]) {
 							if (esq_nao_dir)
 								estado = ESQ_TRANSV;
@@ -416,10 +430,7 @@ int main(int argc, char* args[]) {
 								grid = 1;
 							else
 								grid = 0;
-						}
-						if (tecP[SDL_SCANCODE_ESCAPE]) {
-							gamerunning = 0;
-						}
+						}						
 						if (tecP[SDL_SCANCODE_SPACE]) {
 							//spawn de projetil de metralhadora
 							if (SDL_GetTicks()-ultimoDisparoMetraCoaxial >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA && nBalasMetra < 100) {
@@ -447,12 +458,14 @@ int main(int argc, char* args[]) {
 						}
 						break;
 					case SDL_QUIT:
+						gamerunning = 0;
 						apprunning = 0;
 						break;
 					case SDL_MOUSEMOTION:
 						SDL_GetMouseState(&mx,&my);
 						break;
 					case SDL_MOUSEBUTTONDOWN:
+						if(estado_jogo == JOGO_MORTO) break;
 						//spawn de projeteis
 						if (evt.button.button == SDL_BUTTON_LEFT && nBalas < 100 && SDL_GetTicks()-ultimoDisparo >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
 							ultimoDisparo = SDL_GetTicks();
@@ -477,6 +490,12 @@ int main(int argc, char* args[]) {
 						break;
 					}
 				}
+				if (estado_jogo == JOGO_MORTO) {
+					desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
+					SDL_RenderPresent(ren);
+					continue;
+				}
+
 				//atualiza o frame
 				if (espera == 0) {
 					espera = TPF;
@@ -493,7 +512,7 @@ int main(int argc, char* args[]) {
 					
 					//limpa a tela
 					SDL_RenderClear(ren);
-					
+
 					//particula dos exaustores
 					SDL_FPoint centro_ex1_relativo = rotacionar(zero,exaustor1_offset,angulo);
 					SDL_FPoint centro_ex1_absoluto = somar(centro_ex1_relativo,local);
@@ -1097,10 +1116,14 @@ int main(int argc, char* args[]) {
 						flash_alpha = 255;
 						tempo_morte = SDL_GetTicks();
 					}
+
 					if(estado_jogo == JOGO_MORTO){
-						desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
+						desenhar_tela_de_morte(ren,morte,WIDTH,HEIGHT);
+						
 					}
 
+					
+					
 					//nao exige explicações
 					SDL_RenderPresent(ren);
                     
@@ -1109,8 +1132,10 @@ int main(int argc, char* args[]) {
         
 		} else if (escolha == MENU_TUTORIAL) {
 			printf("Tutorial iniciado!");
+			apprunning = 0;
 		} else if (escolha == MENU_CREDITS) {
 			printf("Bruno, Eraldo e Marcos");
+			apprunning = 0;
 		} else if (escolha == MENU_SAIR) {
 			apprunning = 0;
 		}
