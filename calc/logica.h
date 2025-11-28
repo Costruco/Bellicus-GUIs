@@ -8,5 +8,6 @@
 
 int numeroDentroIntervalo(double n, double a, double b);
 int anguloDentroIntervalo(double n, double a, double b);
+int aproxIgual(double n, double np);
 
 #endif

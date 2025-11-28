@@ -1,16 +1,17 @@
 #include "info.h"
 	
 int stringFormatSize(char * string) {
-	int i = 0, n = 0, lendoFormato = 0, total = 0;
+	int i = 0, n = 0, total = 0;
+	LeitorDeFormato leitor = FORA_DO_FORMATO;
 	while (string[i] != '\0') {
-		switch (lendoFormato) {
-			case 0:
+		switch (leitor) {
+			case FORA_DO_FORMATO:
 				if (string[i] == '%') {
-					lendoFormato = 1;
+					leitor = LENDO_FORMATO;
 					n--;
 				}	
 				break;
-			case 1:
+			case LENDO_FORMATO:
 				if (string[i] >= '0' && string[i] <= '9') {
 					total *= 10;
 					total += string[i]-'0';
@@ -18,14 +19,14 @@ int stringFormatSize(char * string) {
 				} else {
 					n += total-1;
 					total = 0;
-					lendoFormato = 2;
+					leitor = SAINDO_DA_LEITURA;
 				}
 				break;
-			case 2:
+			case SAINDO_DA_LEITURA:
 				if (string[i] == ' ')
-					lendoFormato = 0;
+					leitor = FORA_DO_FORMATO;
 				else if (string[i] == '%')
-					lendoFormato = 1;
+					leitor = LENDO_FORMATO;
 				else
 					n--;
 				break;

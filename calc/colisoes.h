@@ -12,6 +12,7 @@ typedef struct poligono {
 	SDL_FPoint * vertices;
 } poligono;
 
+void renderizarPoligono(SDL_Renderer * ren, poligono p, SDL_FPoint local, double angulo, int r, int g, int b, int a);
 int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2);
 int checarColisaoPontoPonto(SDL_FPoint p1, SDL_FPoint p2);
 int checarColisaoPontoCirculo(SDL_FPoint pnt, poligono cir, SDL_FPoint local2);

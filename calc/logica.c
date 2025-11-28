@@ -15,4 +15,8 @@ int anguloDentroIntervalo(double n, double a, double b) {
 	}
 	return numeroDentroIntervalo(n,a,b);
 }
+
+int aproxIgual(double n, double np) {
+	return numeroDentroIntervalo(n,np-0.1,np+0.1);
+}
 	

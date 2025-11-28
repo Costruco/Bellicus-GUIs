@@ -3,18 +3,35 @@
 
 #include <string.h>
 
-typedef enum movimento {
-	PONTO_MORTO,
+typedef enum Direcao {
+	RETO,
+	ESQ,
+	DIR
+} Direcao;
+
+typedef enum Movimento {
+	NULO,
 	TRANSV,
 	REV,
-	ESQ_TRANSV,
-	DIR_TRANSV,
-	ESQ_REV,
-	DIR_REV,
-	ESQ,
-	DIR	
-} movimento;
+} Movimento;
 
-void stateToString(char * string, movimento estado);
+typedef enum Marcha {
+	RE,
+	PONTO_MORTO,
+	PRIMEIRA,
+	SEGUNDA,
+	TERCEIRA,
+	QUARTA
+} Marcha;
+
+typedef enum LeitorDeFormato {
+	FORA_DO_FORMATO,
+	LENDO_FORMATO,
+	SAINDO_DA_LEITURA
+} LeitorDeFormato;
+
+void movimentoToString(char * string, Movimento estado);
+void direcaoToString(char * string, Direcao estado);
+void marchaToString(char * string, Marcha estado);
 
 #endif

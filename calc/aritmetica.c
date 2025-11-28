@@ -78,6 +78,20 @@ double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2) {
 	return p1.x*p2.x+p1.y*p2.y;
 }
 
+double aceleracao(double velocidade, double massa, double potencia, double atrito) {
+	velocidade = velocidade/32.5;
+	if (velocidade >= 0 && velocidade <= potencia/(GRAVIDADE*atrito*massa))
+		return GRAVIDADE*atrito*32.5;
+	else if (velocidade >= -potencia/(GRAVIDADE*atrito*massa) && velocidade <= 0)
+		return -GRAVIDADE*atrito*32.5;
+	else
+		return potencia/(massa*velocidade)*32.5;
+}
+
+double desaceleracao(double forca_frenagem, double massa) {
+	return forca_frenagem/massa;
+}
+
 SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2) {
 	return (SDL_FPoint){p1.x+p2.x, p1.y+p2.y};
 }
@@ -111,4 +125,3 @@ SDL_FPoint pontoProx(SDL_FPoint p, SDL_FPoint a, SDL_FPoint b) {
 	else
 		return b;
 }
-

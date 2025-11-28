@@ -1,11 +1,9 @@
-#include <string.h>
-
 #include "estados.h"
 
-void stateToString(char * string, movimento estado) {
+void movimentoToString(char * string, Movimento estado) {
 	switch (estado) {
-		case PONTO_MORTO:
-			strcpy(string,"PONTO_MORTO");
+		case NULO:
+			strcpy(string,"NULO");
 			break;
 		case TRANSV:
 			strcpy(string,"TRANSV");
@@ -13,23 +11,42 @@ void stateToString(char * string, movimento estado) {
 		case REV:
 			strcpy(string,"REV");
 			break;
-	    case ESQ_TRANSV:
-			strcpy(string,"ESQ_TRANSV");
+	}
+}
+
+void direcaoToString(char * string, Direcao estado) {
+	switch (estado) {
+		case RETO:
+			strcpy(string,"RETO");
 			break;
-		case DIR_TRANSV:
-			strcpy(string,"DIR_TRANSV");
-			break;
-		case ESQ_REV:
-			strcpy(string,"ESQ_REV");
-			break;
-		case DIR_REV:
-			strcpy(string,"DIR_REV");
-			break;
-		case ESQ:
+		case TRANSV:
 			strcpy(string,"ESQ");
 			break;
-		case DIR:
+		case REV:
 			strcpy(string,"DIR");
+			break;
+	}
+}
+
+void marchaToString(char * string, Marcha estado) {
+	switch (estado) {
+		case RE:
+			strcpy(string,"RE");
+			break;
+		case PONTO_MORTO:
+			strcpy(string,"PONTO_MORTO");
+			break;
+		case PRIMEIRA:
+			strcpy(string,"PRIMEIRA");
+			break;
+		case SEGUNDA:
+			strcpy(string,"SEGUNDA");
+			break;
+		case TERCEIRA:
+			strcpy(string,"TERCEIRA");
+			break;
+		case QUARTA:
+			strcpy(string,"QUARTA");
 			break;
 	}
 }

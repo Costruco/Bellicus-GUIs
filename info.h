@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <stdio.h>
+#include "estados.h"
 
 int stringFormatSize(char * string);
 void dataBox(SDL_Renderer * ren, int x, int y, int max_nLetras, int nLinhas);

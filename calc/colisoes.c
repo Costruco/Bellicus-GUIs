@@ -1,5 +1,18 @@
 #include "colisoes.h"
 
+/*extern int MWIDTH,MHEIGHT;
+void renderizarPoligono(SDL_Renderer * ren, poligono p, SDL_FPoint local, double angulo, int r, int g, int b, int a) {
+	for (int i = 0; i < p.n; i++) {
+		SDL_FPoint p1 = rotacionar(somar(p.centro,local),somar(p.vertices[i],local),angulo),
+				   p2 = rotacionar(somar(p.centro,local),somar(p.vertices[(i+1)%p.n],local),angulo);
+		p1 = somar(p1,(SDL_FPoint){MWIDTH,MHEIGHT});
+		p2 = somar(p2,(SDL_FPoint){MWIDTH,MHEIGHT});
+		lineRGBA(ren,p1.x,p1.y,
+					 p2.x,p2.y,
+					 r,g,b,a);
+	}
+}*/
+
 int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2) {
 	if (!numeroDentroIntervalo(p.y,r1.y,r2.y))
 		return 0;
@@ -7,7 +20,7 @@ int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2) {
 }
 
 int checarColisaoPontoPonto(SDL_FPoint p1, SDL_FPoint p2) {
-	if (numeroDentroIntervalo(p1.x-p2.x,-0.1,0.1) && numeroDentroIntervalo(p1.y-p2.y,-0.1,0.1))
+	if (aproxIgual(p1.x,p2.x) && aproxIgual(p1.y,p2.y))
 		return 1;
 	return 0;
 }
@@ -76,7 +89,5 @@ int checarColisao(poligono p1, poligono p2, SDL_FPoint local1, SDL_FPoint local2
 			
 	} else {
 		return checarColisaoPoligonoPoligono(p1,p2,local1,local2,angulo);
-		
 	}
 }
-
