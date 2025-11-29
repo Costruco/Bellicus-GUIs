@@ -303,9 +303,6 @@ int main(int argc, char* args[]) {
 			SDL_Color branco = {255,255,255,255};
 			
 			//valores do veiculo
-			int POTENCIA = 372800,
-				MASSA = 32400,
-				FRENAGEM = 94000;
 			double velocidade = 0,
 				   VELOCIDADE_ANGULAR = 54,
 				   VELOCIDADE_TORRE = 30,
@@ -314,7 +311,11 @@ int main(int argc, char* args[]) {
 				   VELOCIDADE_DE_RECARGA = 1,
 				   VELOCIDADE_DE_RECARGA_METRA = 1,
 				   VELOCIDADE_DE_TROCA_DE_MARCHA = 1,
-				   ATRITO = 0.3,
+				   POTENCIA = 370000,
+				   MASSA = 36250,
+				   FRENAGEM = 94000,
+				   ATRITO_DO_SOLO = 0.25,
+				   ATRITO_DE_ROLAMENTO = 0.095,
 				   zoom = 0.8;
 				
 			SDL_FPoint torre_offset = {19,0},
@@ -870,7 +871,6 @@ int main(int argc, char* args[]) {
 	        				b2--;
 						}
 					}
-					
 	                int b3;
 	                for(b3 = 0; b3 < nBalasSoldado; b3++){
 	                	atualizarPosicaoProjetil(&bala[b3]);
@@ -884,6 +884,7 @@ int main(int argc, char* args[]) {
 	        				b3--;
 						}
 					}
+					
 					//laser desejado/laser real
 					lineRGBA(ren,centro_torre_absoluto.x,centro_torre_absoluto.y,
 					 		 mira_real.x-16*cos(radianos(angulo_arma)),
@@ -1037,42 +1038,42 @@ int main(int argc, char* args[]) {
 						if (marcha != QUARTA && aproxIgual(velocidade,velocidades[marcha].y) && passando == 0) {
 							inicioDaTroca = SDL_GetTicks();
 							passando = 1;
-						} else if (marcha != RE && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0){
+						} else if (marcha != RE && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0) {
 							inicioDaTroca = SDL_GetTicks();
 							reduzindo = 1;
-						}
+						} else if (velocidade > 0 && marcha != PONTO_MORTO && aproxIgual(velocidade,velocidades[marcha].x) && movimento != TRANSV)
+							marcha = MAX(marcha-1,PONTO_MORTO);
 					}
 					
-					if (passando == 1 && SDL_GetTicks()-inicioDaTroca >= 200*VELOCIDADE_DE_TROCA_DE_MARCHA) {
+					if (passando == 1 && SDL_GetTicks()-inicioDaTroca >= (300+200*marcha)/VELOCIDADE_DE_TROCA_DE_MARCHA) {
 						marcha = MIN(marcha+1,QUARTA);
 						passando = 0;
-					} else if (reduzindo == 1 && SDL_GetTicks()-inicioDaTroca >= 200*VELOCIDADE_DE_TROCA_DE_MARCHA) {
-						marcha = MAX(marcha-1,RE);
+					} else if (reduzindo == 1 && SDL_GetTicks()-inicioDaTroca >= (300+200*marcha)/VELOCIDADE_DE_TROCA_DE_MARCHA) {
+						marcha = MIN(marcha-1,RE);
 						reduzindo = 0;
 					}
 					
 					//acelera ou desacelera o veiculo com base na marcha atual, velocidade e controle
-					if (passando != 1 && reduzindo != 1) {
-						if (velocidade < 0) {
-							if (movimento == NULO)
-								velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
-							else if (movimento == TRANSV)
-								velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
-							else if (movimento == REV)
-								velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
-						} else if (velocidade == 0) {
-							if (movimento == TRANSV)
-								velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
-							else if (movimento == REV)
-								velocidade = MIN(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
-						} else if (velocidade > 0){
-							if (movimento == NULO)
-								velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
-							else if (movimento == TRANSV)
-								velocidade = MIN(velocidades[marcha].y,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO)/FPS);
-							else if (movimento == REV)
-								velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
-						}
+					int troca = (passando == 1 || reduzindo == 1);
+					if (velocidade < 0) {
+						if (movimento == NULO)
+							velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+						else if (movimento == TRANSV)
+							velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+						else if (movimento == REV && !troca)
+							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+					} else if (velocidade == 0) {
+						if (movimento == TRANSV && !troca)
+							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+						else if (movimento == REV && !troca)
+							velocidade = MIN(velocidades[marcha].y,velocidade-aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+					} else if (velocidade > 0){
+						if (movimento == NULO)
+							velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
+						else if (movimento == TRANSV && !troca)
+							velocidade = MIN(velocidades[marcha].y,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+						else if (movimento == REV)
+							velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
 					}
 				
 					//atualiza o angulo do veiculo com base nos controles

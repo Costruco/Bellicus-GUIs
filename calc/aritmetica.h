@@ -22,7 +22,7 @@ int limitarInt(int n, int limite);
 double distanciaEntrePontos(SDL_FPoint p1, SDL_FPoint p2);
 double anguloEntrePontos(SDL_FPoint p1, SDL_FPoint p2);
 double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2);
-double aceleracao(double velocidade, double massa, double potencia, double atrito);
+double aceleracao(double velocidade, double massa, double potencia, double atrito_do_solo, double atrito_de_rolagem);
 double desaceleracao(double forca_frenagem, double massa);
 SDL_FPoint somar(SDL_FPoint p1, SDL_FPoint p2);
 SDL_FPoint sub(SDL_FPoint p1, SDL_FPoint p2);

@@ -78,14 +78,14 @@ double produtoEscalar(SDL_FPoint p1, SDL_FPoint p2) {
 	return p1.x*p2.x+p1.y*p2.y;
 }
 
-double aceleracao(double velocidade, double massa, double potencia, double atrito) {
+double aceleracao(double velocidade, double massa, double potencia, double atrito_do_solo, double atrito_de_rolagem) {
 	velocidade = velocidade/32.5;
-	if (numeroDentroIntervalo(velocidade,0,potencia/(GRAVIDADE*atrito*massa)))
-		return GRAVIDADE*atrito*32.5;
-	else if (numeroDentroIntervalo(velocidade,-potencia/(GRAVIDADE*atrito*massa),0))
-		return -GRAVIDADE*atrito*32.5;
+	if (numeroDentroIntervalo(velocidade,0,potencia/(GRAVIDADE*(atrito_do_solo-atrito_de_rolagem)*massa)))
+		return GRAVIDADE*(atrito_do_solo-atrito_de_rolagem)*32.5;
+	else if (numeroDentroIntervalo(velocidade,-potencia/(GRAVIDADE*(atrito_do_solo-atrito_de_rolagem)*massa),0))
+		return -GRAVIDADE*(atrito_do_solo-atrito_de_rolagem)*32.5;
 	else
-		return potencia/(massa*velocidade)*32.5;
+		return (potencia/(massa*velocidade)-atrito_de_rolagem*GRAVIDADE)*32.5;
 }
 
 double desaceleracao(double forca_frenagem, double massa) {
