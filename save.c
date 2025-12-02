@@ -24,4 +24,3 @@ int carregar(SaveData *data) {
     fclose(f);
     return 1;
 }
-

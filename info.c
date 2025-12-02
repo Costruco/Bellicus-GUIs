@@ -91,4 +91,3 @@ void stringDataLabel(SDL_Renderer * ren, int x, int y, int nLinhas, char * strin
     else
         stringRGBA(ren, x+3, y+3+nLinhas*11, newString, 255,255,255,255);
 }
-

@@ -241,7 +241,3 @@ void liberar_QT(QuadTree* qt) {
 
     free(qt);
 }
-
-
-
-

@@ -41,7 +41,11 @@ poligono hitbox_tanque = {4,
 int FPS = 120, TPF = 8;
 
 //Tela de morte
-enum {JOGO_VIVO, JOGO_MORTO};
+typedef enum ESTADO_JOGO { 
+	JOGO_VIVO, 
+	JOGO_MORTO
+} ESTADO_JOGO;
+
 int estado_jogo = JOGO_VIVO;
 float fade_morte = 0.0f;
 float zoom_morte = 0.3f;
@@ -81,46 +85,34 @@ typedef struct projetil {
 	int variacao;	
 } projetil;
 
-void desenhar_tela_de_morte(SDL_Renderer *ren,
-                            SDL_Texture *tex_morte,
-                            int width,
-                            int height)
-{
+void desenhar_tela_de_morte(SDL_Renderer *ren, SDL_Texture *tex_morte, int width, int height) {
     if (flash_alpha > 0) {
-        SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(ren, 255, 255, 255, flash_alpha);
         SDL_RenderFillRect(ren, NULL);
         flash_alpha -= 5;
         if (flash_alpha < 0) flash_alpha = 0;
 		return;
     }
-
-    SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+    
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 180);
     SDL_FRect overlay = {0, 0, (float)width, (float)height};
     SDL_RenderFillRectF(ren, &overlay);
 
-    if (fade_morte < 255) fade_morte += 2;
-    if (zoom_morte < 1.0f) zoom_morte += 0.005f;
+    if (fade_morte < 255) 
+		fade_morte += 2;
+    if (zoom_morte < 1.0f) 
+		zoom_morte += 0.005f;
 
     float pulsar = 0.7f + 0.3f * sin(SDL_GetTicks() * 0.004f);
     Uint8 alpha_final = (Uint8)(fade_morte * pulsar);
 
     SDL_SetTextureAlphaMod(tex_morte, alpha_final);
-
-    SDL_FRect dst = {
-        (width  - width  * zoom_morte) / 2,
-        (height - height * zoom_morte) / 2,
-        width  * zoom_morte,
-        height * zoom_morte
-    };
-
+    SDL_FRect dst = {(width  - width  * zoom_morte)/2,
+        			 (height - height * zoom_morte)/2,
+        			 width  * zoom_morte,
+        			 height * zoom_morte};
     SDL_RenderCopyExF(ren, tex_morte, NULL, &dst, 0, NULL, SDL_FLIP_NONE);
-
 }
-
-
-
 
 void atualizarPosicaoProjetil(projetil * bl1) {
 	SDL_FPoint ptdt = mover(bl1->velocidade/FPS,bl1->angulo);
@@ -196,20 +188,13 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 		return 1;
 	}
 	if (checarColisao(hitbox_soldado,hitbox_tanque,batalhao[i].local,local,angulo)) {
-	/*
-	SDL_FPoint normal = rotacionar(local,batalhao[i].local,-angulo);
-	if (!numeroDentroIntervalo(normal.x-local.x,-97,97))
-		return 0;
-	if (!numeroDentroIntervalo(normal.y-local.y,-48,48))
-		return 0;
-    */
-	terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},
-					     angulo+180,
-						 velocidade};
-	sangue[((*nSangue)++)%100] = newsangue;
-    
-	batalhao[i] = batalhao[--(*nSoldados)];
-	return 1;
+		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x,batalhao[i].local.y},
+						     angulo+180,
+							 velocidade};
+		sangue[((*nSangue)++)%100] = newsangue;
+	    
+		batalhao[i] = batalhao[--(*nSoldados)];
+		return 1;
 	}
 }
 
@@ -249,6 +234,7 @@ int main(int argc, char* args[]) {
 	SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
 	int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
+	SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
 	SDL_ShowCursor(SDL_DISABLE);
 	srand(SDL_GetTicks());
 	int apprunning = 1;
@@ -306,7 +292,7 @@ int main(int argc, char* args[]) {
 			double velocidade = 0,
 				   VELOCIDADE_ANGULAR = 54,
 				   VELOCIDADE_TORRE = 30,
-				   TEMPO_DE_RECARGA = 1000,
+				   TEMPO_DE_RECARGA = 5000,
 				   TEMPO_DE_RECARGA_METRA = 100,
 				   VELOCIDADE_DE_RECARGA = 1,
 				   VELOCIDADE_DE_RECARGA_METRA = 1,
@@ -492,14 +478,14 @@ int main(int argc, char* args[]) {
 							break;
 					}
 				}
-				if (estado_jogo == JOGO_MORTO) {
-					desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
-					SDL_RenderPresent(ren);
-					continue;
-				}
-
+				
 				//atualiza o frame
 				if (espera == 0) {
+					if (estado_jogo == JOGO_MORTO) {
+						desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
+						SDL_RenderPresent(ren);
+						continue;
+					}
 					espera = TPF;
 					
 					//atualiza o FPS
@@ -1035,43 +1021,45 @@ int main(int argc, char* args[]) {
 							reduzindo = 1;
 						}
 					} else {
-						if (marcha != QUARTA && aproxIgual(velocidade,velocidades[marcha].y) && passando == 0) {
+						if (marcha != QUARTA && aproxIgual(velocidade,velocidades[marcha].y) && passando == 0 && movimento == TRANSV) {
 							inicioDaTroca = SDL_GetTicks();
 							passando = 1;
-						} else if (marcha != RE && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0) {
+						} else if (marcha > PONTO_MORTO && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0 && movimento == REV) {
+							marcha = MAX(marcha-1,PONTO_MORTO);
+						} else if (marcha > PONTO_MORTO && aproxIgual(velocidade,velocidades[marcha].x) && reduzindo == 0 && movimento == NULO) {
 							inicioDaTroca = SDL_GetTicks();
 							reduzindo = 1;
-						} else if (velocidade > 0 && marcha != PONTO_MORTO && aproxIgual(velocidade,velocidades[marcha].x) && movimento != TRANSV)
-							marcha = MAX(marcha-1,PONTO_MORTO);
+						}
 					}
 					
-					if (passando == 1 && SDL_GetTicks()-inicioDaTroca >= (300+200*marcha)/VELOCIDADE_DE_TROCA_DE_MARCHA) {
+					if (passando == 1 && SDL_GetTicks()-inicioDaTroca >= 250/VELOCIDADE_DE_TROCA_DE_MARCHA) {
 						marcha = MIN(marcha+1,QUARTA);
 						passando = 0;
-					} else if (reduzindo == 1 && SDL_GetTicks()-inicioDaTroca >= (300+200*marcha)/VELOCIDADE_DE_TROCA_DE_MARCHA) {
-						marcha = MIN(marcha-1,RE);
+					} else if (reduzindo == 1 && SDL_GetTicks()-inicioDaTroca >= 250/VELOCIDADE_DE_TROCA_DE_MARCHA) {
+						marcha = MAX(marcha-1,RE);
 						reduzindo = 0;
 					}
 					
 					//acelera ou desacelera o veiculo com base na marcha atual, velocidade e controle
 					int troca = (passando == 1 || reduzindo == 1);
+					double TURNING = 0.035*(direcao != RETO);
 					if (velocidade < 0) {
 						if (movimento == NULO)
 							velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
 						else if (movimento == TRANSV)
 							velocidade = MIN(velocidades[marcha].y,velocidade+desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
 						else if (movimento == REV && !troca)
-							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO+TURNING)/FPS);
 					} else if (velocidade == 0) {
 						if (movimento == TRANSV && !troca)
-							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+							velocidade = MAX(velocidades[marcha].x,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO+TURNING)/FPS);
 						else if (movimento == REV && !troca)
-							velocidade = MIN(velocidades[marcha].y,velocidade-aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+							velocidade = MIN(velocidades[marcha].y,velocidade-aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO+TURNING)/FPS);
 					} else if (velocidade > 0){
 						if (movimento == NULO)
 							velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
 						else if (movimento == TRANSV && !troca)
-							velocidade = MIN(velocidades[marcha].y,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO)/FPS);
+							velocidade = MIN(velocidades[marcha].y,velocidade+aceleracao(velocidade,MASSA,POTENCIA,ATRITO_DO_SOLO,ATRITO_DE_ROLAMENTO+TURNING)/FPS);
 						else if (movimento == REV)
 							velocidade = MAX(velocidades[marcha].x,velocidade-desaceleracao(FRENAGEM,MASSA)*32.5/FPS);
 					}
