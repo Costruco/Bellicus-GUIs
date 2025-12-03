@@ -30,6 +30,11 @@ typedef enum LeitorDeFormato {
 	SAINDO_DA_LEITURA
 } LeitorDeFormato;
 
+typedef enum EstadoDoJogo { 
+	JOGO_VIVO, 
+	JOGO_MORTO
+} EstadoDoJogo;
+
 void movimentoToString(char * string, Movimento estado);
 void direcaoToString(char * string, Direcao estado);
 void marchaToString(char * string, Marcha estado);

@@ -13,77 +13,12 @@
 #include "calc/quadtree.h"
 #include "espera.h"
 #include "estados.h"
+#include "estruturas.h"
+#include "global.h"
 #include "info.h"
 #include "menu.h"
 
 // 1 metro = 32.5 pixels
-
-//velocidades
-SDL_FPoint velocidades[] = {{-65,0},
- 						    {0,0},
-							{0,65},
-							{65,135},
-							{135,225},
-							{225,487}};
-
-//caixas de colis�o
-SDL_FPoint vertices_tanque[] = {{-90,-50},{+90,-50},{+90,+50},{-90,+50}},
-		   vertices_soldado[] = {{-16,-16},{+16,-16},{+16,+16},{-16,+16}};
-		   
-poligono hitbox_tanque = {4,
-						  {0,0},
-						  vertices_tanque},
-	     hitbox_soldado = {4,
-	                       {0,0},
-						   vertices_soldado};
-
-//o FPS � GLOBAL!										  
-int FPS = 120, TPF = 8;
-
-//Tela de morte
-typedef enum ESTADO_JOGO { 
-	JOGO_VIVO, 
-	JOGO_MORTO
-} ESTADO_JOGO;
-
-int estado_jogo = JOGO_VIVO;
-float fade_morte = 0.0f;
-float zoom_morte = 0.3f;
-int flash_alpha = 255;
-Uint32 tempo_morte = 0;
-
-typedef struct terreno {
-	SDL_FPoint local;
-    double angulo;
-    double velocidade;
-} terreno;
-
-typedef struct particula {
-	SDL_FPoint local;
-	int nascimento;
-	int tempo_de_vida;
-	int tipo;
-	int var;
-} particula;
-
-typedef struct soldado {
-	SDL_FPoint local;
-	int vida;
-	int variacao;
-	double folga_de_fuga;
-	double angulo;	
-	SDL_FPoint erro_na_mira;
-} soldado;
-
-typedef struct projetil {
-	SDL_FPoint local;
-	double distanciaAlvo;
-	double peso;
-	double angulo;
-	double velocidade;
-	int tipo;
-	int variacao;	
-} projetil;
 
 void desenhar_tela_de_morte(SDL_Renderer *ren, SDL_Texture *tex_morte, int width, int height) {
     if (flash_alpha > 0) {
@@ -227,12 +162,9 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
-	int WIDTH, 
-		HEIGHT;
 	int MAP_X_SIZE = 10000,
 		MAP_Y_SIZE = 10000;
 	SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
-	int MWIDTH = WIDTH/2, MHEIGHT = HEIGHT/2;
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
 	SDL_ShowCursor(SDL_DISABLE);
@@ -260,7 +192,8 @@ int main(int argc, char* args[]) {
                 * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
                 * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
                 * morte = IMG_LoadTexture(ren,"./img/morte.png"),
-				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png");
+				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png"),
+				* nuvens = IMG_LoadTexture(ren, "./sprites/nuvens.png");
 				
 	//sprites com aaliasing
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"linear");
@@ -342,6 +275,7 @@ int main(int argc, char* args[]) {
 				gamerunning = 1,
 				debug = 0,
 				grid = 0,
+				metra = 0,
 				mx=0,my=0,
 				esperaPorInimigo = 2000,
 				esperaPorFumaca = 7,
@@ -408,16 +342,22 @@ int main(int argc, char* args[]) {
 								zoom += 0.05;
 								
 							if (tecP[SDL_SCANCODE_F3]) {
-								if (debug == 0)
-									debug = 1;
-								else
+								if (debug)
 									debug = 0;
+								else
+									debug = 1;
 							}
 							if (tecP[SDL_SCANCODE_G]) {
-								if (grid == 0)
-									grid = 1;
-								else
+								if (grid)
 									grid = 0;
+								else
+									grid = 1;
+							}
+							if (tecP[SDL_SCANCODE_M]) {
+								if (metra)
+									metra = 0;
+								else
+									metra = 1;
 							}						
 							if (tecP[SDL_SCANCODE_SPACE]) {
 								//spawn de projetil de metralhadora
@@ -568,9 +508,7 @@ int main(int argc, char* args[]) {
 					
 					//metralhadora movel
 					SDL_FPoint ponta_da_metra_chassi;
-					//
-					/*
-					if(SDL_GetTicks()-ultimoDisparoMetraChassi >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
+					if(metra && SDL_GetTicks()-ultimoDisparoMetraChassi >= TEMPO_DE_RECARGA_METRA/VELOCIDADE_DE_RECARGA_METRA){
 						ponta_da_metra_chassi = somar(somar(local, rotacionar(zero, metra_chassi_offset, angulo)), mover(14, angulo_metra));
 						
 						//centro do flash da metralhadora 
@@ -612,8 +550,6 @@ int main(int argc, char* args[]) {
 							}
 						}
 					}
-					*/
-					//
 					
 	                //tiros soldados
 	                if(SDL_GetTicks()-ultimoDisparoSoldado >= TEMPO_DE_RECARGA/VELOCIDADE_DE_RECARGA) {
@@ -847,7 +783,7 @@ int main(int argc, char* args[]) {
 						int bala_fora = (bullet[b2].distanciaAlvo <= 0),
 							matou = 0;
 						for(s = 0; s < nSoldados; s++){
-							if((colisaoBala(batalhao, sangue, s, bullet[b2], bullet[b2].angulo, &nSoldados, &nSangue))){
+							if((colisaoBala(batalhao, sangue, s, bullet[b2], bullet[b2].angulo, &nSoldados, &nSangue))) {
 								matou = 1;
 								break;
 							}

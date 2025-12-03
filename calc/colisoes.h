@@ -4,13 +4,9 @@
 #include <SDL2/SDL.h>
 
 #include "aritmetica.h"
+#include "estruturas.h"
+#include "global.h"
 #include "logica.h"
-
-typedef struct poligono {
-	int n;
-	SDL_FPoint centro;
-	SDL_FPoint * vertices;
-} poligono;
 
 void renderizarPoligono(SDL_Renderer * ren, poligono p, SDL_FPoint local, double angulo, int r, int g, int b, int a);
 int antesDaReta(SDL_FPoint p, SDL_FPoint r1, SDL_FPoint r2);
