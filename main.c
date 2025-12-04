@@ -161,6 +161,9 @@ void renderizarSoldado(SDL_Renderer * ren, SDL_Texture * textura, soldado sd1, S
 
 int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
+	Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG);
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+	
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
 	int MAP_X_SIZE = 10000,
 		MAP_Y_SIZE = 10000;
@@ -173,9 +176,7 @@ int main(int argc, char* args[]) {
 	
 	//texturas tem que ser carregadas antes para o valor de aaliasing n�o ser alterado em runs consecutivas
 	//sprites
-	SDL_Texture * chassiLQ = IMG_LoadTexture(ren, "./sprites/chassi_baixa_qualidade.png"),
-				* torreLQ = IMG_LoadTexture(ren, "./sprites/torre_baixa_qualidade.png"),
-				* reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
+	SDL_Texture * reticula1 = IMG_LoadTexture(ren, "./sprites/reticula_opaca.png"),
 				* reticula2 = IMG_LoadTexture(ren, "./sprites/reticula_translucida.png"),
                 * soldados = IMG_LoadTexture(ren, "./sprites/soldados.png"),
 				* municao = IMG_LoadTexture(ren, "./sprites/municao.png"),
@@ -201,10 +202,13 @@ int main(int argc, char* args[]) {
 				* torreHD = IMG_LoadTexture(ren, "./sprites/torre_com_sombra.png"),
 				* cupola = IMG_LoadTexture(ren, "./sprites/cupola_metralhadora_chassi.png"),
 				* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png");
-						
+	
+	//efeitos sonoros
+	Mix_Chunk * tiro_de_metralhadora = Mix_LoadWAV("./sound/disparo_metralhadora.ogg");
+	
 	while (!SDL_QuitRequested() && apprunning) {
-		MenuOption escolha = menu_loop(ren, win, WIDTH, HEIGHT);
 		//MENU DO JOGO
+		MenuOption escolha = menu_loop(ren, win, WIDTH, HEIGHT);
 		if(escolha == MENU_PLAY){
 			estado_jogo = JOGO_VIVO;
 			//variaveis padrão da tela de morte 
@@ -382,6 +386,7 @@ int main(int argc, char* args[]) {
 															 0};
 										marcos[nParticulas++] = newpart;
 									}
+									Mix_PlayChannel(-1, tiro_de_metralhadora, 0);
 								}
 							}
 							break;
@@ -545,6 +550,7 @@ int main(int argc, char* args[]) {
 															   0};
 										marcos[nParticulas++] = newpart;
 									}
+									Mix_PlayChannel(-1, tiro_de_metralhadora, 0);
 									break;
 								}
 							}
@@ -705,13 +711,8 @@ int main(int argc, char* args[]) {
 					}
 	                
 					//chassi do tanque
-					SDL_Texture * chassi;
-					if (zoom >= 0.2)
-						chassi = chassiHD; //eu sou o eraldo dou muito a bunda 
-					else 
-						chassi = chassiLQ;
 					SDL_FRect base_chassi = {MWIDTH-101*zoom,MHEIGHT-52*zoom,203*zoom,104*zoom};
-					SDL_RenderCopyExF(ren,chassi,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
+					SDL_RenderCopyExF(ren,chassiHD,NULL,&base_chassi,angulo,NULL,SDL_FLIP_NONE);
 					
 					//metralhadora do chassi
 					SDL_FRect base_metralhadora = {base_metra.x,base_metra.y,14*zoom,8*zoom};
@@ -814,13 +815,8 @@ int main(int argc, char* args[]) {
 							 255,255,255,25);
 					
 					//torre do tanque
-					SDL_Texture * torre;
-					if (zoom >= 0.2)
-						torre = torreHD;
-					else 
-						torre = torreLQ;
 					SDL_FRect base_torre = {base.x,base.y,146*zoom,68*zoom};
-					SDL_RenderCopyExF(ren, torre, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
+					SDL_RenderCopyExF(ren, torreHD, NULL, &base_torre, angulo_arma, &centro_torre, SDL_FLIP_NONE);
 					
 					//atualização de particulas
 					for (int p1 = 0; p1 < nParticulas; p1++) {
@@ -1086,6 +1082,36 @@ int main(int argc, char* args[]) {
 		}
 	}
 	
+	//finaliza o mixer
+	Mix_FreeChunk(tiro_de_metralhadora);
+	Mix_CloseAudio();
+	Mix_Quit();
+	
+	//destroi as texturas
+	SDL_DestroyTexture(reticula1);
+	SDL_DestroyTexture(reticula2);
+	SDL_DestroyTexture(soldados);
+	SDL_DestroyTexture(municao);
+	SDL_DestroyTexture(municao_metralhadora);
+	SDL_DestroyTexture(explosao);
+	SDL_DestroyTexture(cratera);
+	SDL_DestroyTexture(sangue_arrasto);
+	SDL_DestroyTexture(flash1);
+	SDL_DestroyTexture(flash2);
+	SDL_DestroyTexture(flash3);
+	SDL_DestroyTexture(blast);
+	SDL_DestroyTexture(fumaca);
+	SDL_DestroyTexture(municao_soldado);
+	SDL_DestroyTexture(vidatanque);
+	SDL_DestroyTexture(fundovida);
+	SDL_DestroyTexture(morte);
+	SDL_DestroyTexture(tile_map);
+	SDL_DestroyTexture(nuvens);
+	SDL_DestroyTexture(chassiHD);
+	SDL_DestroyTexture(torreHD);
+	SDL_DestroyTexture(cupola);
+	SDL_DestroyTexture(metralhadora_chassi);
+				
 	//finaliza a aplicação
 	SDL_DestroyRenderer(ren);
 	SDL_DestroyWindow(win);

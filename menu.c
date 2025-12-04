@@ -14,11 +14,6 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
     SDL_Texture* setaTex = SDL_CreateTextureFromSurface(renderer, setaSurface);
     SDL_FreeSurface(setaSurface);
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-        printf("Erro ao iniciar SDL_mixer: %s\n", Mix_GetError());
-        return MENU_TOTAL; 
-    }
-
     Mix_Music* music = Mix_LoadMUS("./music/hino_urss.mp3");
     if (!music) {
         printf("Erro ao carregar música: %s\n", Mix_GetError());
@@ -74,8 +69,5 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
 
     Mix_HaltMusic();
     Mix_FreeMusic(music);
-    Mix_CloseAudio();
-
-
     return MENU_TOTAL;
 }
