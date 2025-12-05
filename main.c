@@ -197,7 +197,8 @@ int main(int argc, char* args[]) {
                 * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
                 * morte = IMG_LoadTexture(ren,"./img/morte.png"),
 				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png"),
-				* nuvens = IMG_LoadTexture(ren, "./sprites/nuvens.png");
+				* nuvens = IMG_LoadTexture(ren, "./sprites/nuvens.png"),
+                * ffvida = IMG_LoadTexture(ren, "./sprites/ffvida.png");
 				
 	//sprites com aaliasing
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"linear");
@@ -945,6 +946,8 @@ int main(int argc, char* args[]) {
 					doubleDataLabel(ren,0,HEIGHT-25,2,controleTorre,infoTorre,NULL);
 							
 					//barra de vida
+                    SDL_FRect ffv = {500,20,400,60};
+                    SDL_RenderCopyExF(ren,ffvida,NULL,&ffv,0,NULL,SDL_FLIP_NONE);
                     SDL_FRect fv = {500,20,400*vidaTanque/HEALTH_BAR_SIZE,60};
                     SDL_RenderCopyExF(ren,fundovida,NULL,&fv,0,NULL,SDL_FLIP_NONE); 					
                     SDL_FRect bv = {500,20,400,60};
@@ -1118,6 +1121,7 @@ int main(int argc, char* args[]) {
 	SDL_DestroyTexture(torreHD);
 	SDL_DestroyTexture(cupola);
 	SDL_DestroyTexture(metralhadora_chassi);
+    SDL_DestroyTexture(ffvida);
 				
 	//finaliza a aplicação
 	SDL_DestroyRenderer(ren);
