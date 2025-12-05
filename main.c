@@ -117,7 +117,7 @@ void corrigirColisao(soldado * sd1, soldado * sd2) {
 	}
 }
 
-int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue, SDL_Renderer * ren) {
+int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, double angulo, terreno sangue[], double velocidade, int * nSangue, SDL_Renderer * ren, int * soldadosMortos) {
 	if (batalhao[i].vida == 0) {
 		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
@@ -127,18 +127,21 @@ int checarVida(soldado batalhao[], int i, int * nSoldados, SDL_FPoint local, dou
 						     angulo+180,
 							 velocidade};
 		sangue[((*nSangue)++)%100] = newsangue;
-	    
+	    (*soldadosMortos)++;
+
+        
 		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
 	}
 }
 
-int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue){
+int colisaoBala(soldado batalhao[], terreno sangue[], int i, projetil bullet, double angulo, int* nSoldados, int* nSangue, int* soldadosMortos){
 	if (distanciaEntrePontos(batalhao[i].local, bullet.local) < 16){
 		terreno newsangue = {(SDL_FPoint){batalhao[i].local.x, batalhao[i].local.y}, angulo+180,0};
 
 		sangue[((*nSangue)++)%100] = newsangue;
-
+        (*soldadosMortos)++;
+        
 		batalhao[i] = batalhao[--(*nSoldados)];
 		return 1;
 	}
@@ -268,7 +271,8 @@ int main(int argc, char* args[]) {
 				nBalas = 0,
 				nBalasMetra = 0,
 	            nBalasSoldado=0,
-	            nSangue=0;
+	            nSangue=0,
+                soldadosMortos=0;
 			
 			const Uint8 * tecP = SDL_GetKeyboardState(NULL);
 			
@@ -295,8 +299,8 @@ int main(int argc, char* args[]) {
 			Uint32 espera = TPF;
 			SDL_Event evt;
 			
-			int HEALTH_BAR_SIZE = 10000;
-            float vidaTanque = 10000;
+			int HEALTH_BAR_SIZE = 1000;
+            float vidaTanque = 1000;
 			
 			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
@@ -700,7 +704,7 @@ int main(int argc, char* args[]) {
 						}
 					}
 					for (s1 = 0; s1 < nSoldados; s1++) {
-						if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue,ren)) {
+						if (checarVida(batalhao,s1,&nSoldados,local,angulo,sangue,velocidade,&nSangue,ren, &soldadosMortos)) {
 							continue;
 						}
 						atualizarPosicaoSoldado(&batalhao[s1],local);
@@ -784,7 +788,7 @@ int main(int argc, char* args[]) {
 						int bala_fora = (bullet[b2].distanciaAlvo <= 0),
 							matou = 0;
 						for(s = 0; s < nSoldados; s++){
-							if((colisaoBala(batalhao, sangue, s, bullet[b2], bullet[b2].angulo, &nSoldados, &nSangue))) {
+							if((colisaoBala(batalhao, sangue, s, bullet[b2], bullet[b2].angulo, &nSoldados, &nSangue,&soldadosMortos))) {
 								matou = 1;
 								break;
 							}
@@ -917,18 +921,20 @@ int main(int argc, char* args[]) {
 											   "y: %14.0lf",
 											   "Angulo: %9.2lf",
 											   "Velocidade: -",
-											   "            %5.1lf"};
+											   "            %5.1lf",
+                                               "Pontos: %9.0lf"};
 					double infoChassi[] = {local.x,
 										   -local.y,
 										   angulo,
 										   0,
-										   velocidade/32.5*3.6};
+										   velocidade/32.5*3.6,soldadosMortos};
 					SDL_Color coresChassi[] = {branco,
 											   branco,
 											   branco,
 											   branco,
-											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255}};
-					doubleDataLabel(ren,0,0,5,controleChassi,infoChassi,coresChassi);
+											   (SDL_Color){255,250-0.50*(MOD(velocidade)),250-0.50*(MOD(velocidade)),255},
+                                               branco};
+					doubleDataLabel(ren,0,0,6,controleChassi,infoChassi,coresChassi);
 					
 					//painel de controle da torre
 					char * controleTorre[] = {"angulo da torre: %6.2lf",
