@@ -386,7 +386,7 @@ int main(int argc, char* args[]) {
 															 0};
 										marcos[nParticulas++] = newpart;
 									}
-									Mix_PlayChannel(-1, tiro_de_metralhadora, 0);
+									Mix_PlayChannel(-1,tiro_de_metralhadora,0);
 								}
 							}
 							break;
@@ -550,7 +550,7 @@ int main(int argc, char* args[]) {
 															   0};
 										marcos[nParticulas++] = newpart;
 									}
-									Mix_PlayChannel(-1, tiro_de_metralhadora, 0);
+									Mix_PlayChannel(-1,tiro_de_metralhadora,0);
 									break;
 								}
 							}

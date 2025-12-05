@@ -43,8 +43,6 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
 
                                     Mix_HaltMusic();
                                     Mix_FreeMusic(music);
-                                    Mix_CloseAudio();
-
                                     return selected;
                             }
                         }
@@ -63,7 +61,6 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
         SDL_RenderPresent(renderer);
     
     }
-
     SDL_DestroyTexture(background);
     SDL_DestroyRenderer(renderer);
 
