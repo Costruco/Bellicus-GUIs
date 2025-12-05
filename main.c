@@ -841,6 +841,7 @@ int main(int argc, char* args[]) {
 									if (!numeroDentroIntervalo(batalhao[s1].local.y,hell[b1].local.y-7.5*tempo_vivo/100,hell[b1].local.y+7.5*tempo_vivo/100))
 										continue;
 									batalhao[s1].vida = 0;
+                                    soldadosMortos++;
 								}
 								recorte = (SDL_Rect){100*(int)((tempo_vivo%200)/40),100*(int)(tempo_vivo/200),100,100};
 								base = (SDL_FRect){(marcos[p1].local.x-local.x-100)*zoom+MWIDTH,(marcos[p1].local.y-local.y-100)*zoom+MHEIGHT,200*zoom,200*zoom};
