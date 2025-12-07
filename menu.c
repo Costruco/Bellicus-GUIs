@@ -21,7 +21,6 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
         Mix_PlayMusic(music, -1); 
     }
 
-
     SDL_Event e;
     MenuOption selected = MENU_PLAY;
     Uint32 espera = 25;
@@ -30,36 +29,36 @@ MenuOption menu_loop(SDL_Renderer* renderer, SDL_Window* win, int width, int hei
         int isevt = AUX_WaitEventTimeoutCount(&e, &espera);
          if(isevt){
              if (e.type == SDL_KEYDOWN) {
-                            switch (e.key.keysym.sym) {
-                                case SDLK_UP:
-                                    selected = (MenuOption)((selected - 1 + MENU_TOTAL) % MENU_TOTAL);
-                                    break;
-                                case SDLK_DOWN:
-                                    selected = (MenuOption)((selected + 1) % MENU_TOTAL);
-                                    break;
-                                case SDLK_RETURN:
-                                    SDL_DestroyTexture(background);
-                                    SDL_DestroyTexture(setaTex);
+                switch (e.key.keysym.sym) {
+                    case SDLK_UP:
+                        selected = (MenuOption)((selected - 1 + MENU_TOTAL) % MENU_TOTAL);
+                        break;
+                    case SDLK_DOWN:
+                        selected = (MenuOption)((selected + 1) % MENU_TOTAL);
+                        break;
+                    case SDLK_RETURN:
+                        SDL_DestroyTexture(background);
+                        SDL_DestroyTexture(setaTex);
 
-                                    Mix_HaltMusic();
-                                    Mix_FreeMusic(music);
-                                    return selected;
-                            }
-                        }
+                        Mix_HaltMusic();
+                        Mix_FreeMusic(music);
+                        return selected;
                 }
-        
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, background, NULL, NULL);
-
-        SDL_Rect setaRect;
-        setaRect.w = 40; 
-        setaRect.h = 40; 
-        setaRect.x = 1.32*width/2; 
-        setaRect.y = (height/2.22) + selected * height/9;
-        SDL_RenderCopy(renderer, setaTex, NULL, &setaRect);
-
-        SDL_RenderPresent(renderer);
-    
+            }
+        } else if (espera == 0) {
+			espera = 25;
+	        SDL_RenderClear(renderer);
+	        SDL_RenderCopy(renderer, background, NULL, NULL);
+	
+	        SDL_Rect setaRect;
+	        setaRect.w = 40; 
+	        setaRect.h = 40; 
+	        setaRect.x = 1.32*width/2; 
+	        setaRect.y = (height/2.22) + selected * height/9;
+	        SDL_RenderCopy(renderer, setaTex, NULL, &setaRect);
+	
+	        SDL_RenderPresent(renderer);
+    	}
     }
     SDL_DestroyTexture(background);
     SDL_DestroyRenderer(renderer);
