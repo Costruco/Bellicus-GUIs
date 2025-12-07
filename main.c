@@ -166,11 +166,15 @@ int main(int argc, char* args[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-	
+	Mix_AllocateChannels(32);
+	Mix_Volume(-1, 15);
+	Mix_VolumeMusic(15);
 	SDL_Window * win = SDL_CreateWindow("Bellicus", 0, 0, 0, 0, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN | 0x00001000);
 	int MAP_X_SIZE = 10000,
 		MAP_Y_SIZE = 10000;
 	SDL_GetWindowSize(win, &WIDTH,&HEIGHT);
+	MWIDTH = WIDTH/2;
+	MHEIGHT = HEIGHT/2;
 	SDL_Renderer * ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
 	SDL_ShowCursor(SDL_DISABLE);
@@ -196,7 +200,8 @@ int main(int argc, char* args[]) {
                 * vidatanque = IMG_LoadTexture(ren, "./sprites/barradevida.png"),
                 * fundovida = IMG_LoadTexture(ren, "./sprites/fundovida.png"),
                 * morte = IMG_LoadTexture(ren,"./img/morte.png"),
-				* tile_map = IMG_LoadTexture(ren, "./sprites/tile_map.png"),
+				* terra = IMG_LoadTexture(ren, "./sprites/tile_map_1.png"),
+				* neve = IMG_LoadTexture(ren, "./sprites/tile_map_2.png"),
 				* nuvens = IMG_LoadTexture(ren, "./sprites/nuvens.png"),
                 * ffvida = IMG_LoadTexture(ren, "./sprites/ffvida.png");
 				
@@ -208,7 +213,8 @@ int main(int argc, char* args[]) {
 				* metralhadora_chassi = IMG_LoadTexture(ren, "./sprites/metralhadora_chassi.png");
 	
 	//efeitos sonoros
-	Mix_Chunk * tiro_de_metralhadora = Mix_LoadWAV("./sound/disparo_metralhadora.ogg");
+	Mix_Chunk * disp_metralhadora = Mix_LoadWAV("./sound/disparo_metralhadora.ogg"),
+			  * disp_canhao = Mix_LoadWAV("./sound/disparo_canhao.ogg");
 	
 	while (!SDL_QuitRequested() && apprunning) {
 		//MENU DO JOGO
@@ -303,11 +309,41 @@ int main(int argc, char* args[]) {
 			int HEALTH_BAR_SIZE = 1000;
             float vidaTanque = 1000;
 			
+			int chao = rand()%2;
+			SDL_Texture * tile_map;
+			switch (chao) {
+				case 0:
+					tile_map = terra;
+					break;
+				case 1:
+					tile_map = neve;
+					break;
+			}
 			SDL_Point mapa[MAP_X_SIZE/100][MAP_Y_SIZE/100];
 			for (int i = 0; i < MAP_X_SIZE/100; i++) {
 				for (int j = 0; j < MAP_Y_SIZE/100; j++) {
-					mapa[i][j].x = rand()%16;
-					mapa[i][j].y = rand()%4;
+					int tile = rand()%16,
+						rot = rand()%4;
+					switch (chao) {
+						case 0:
+							mapa[i][j].x = tile;
+							mapa[i][j].y = rot;
+							break;
+						case 1:
+							if (tile%4 != 3 || i%7 !=0 || j%7 != 0 || i == 0 || j == 0) {
+								mapa[i][j].x = (tile%4 == 3)?tile-1:tile;
+								mapa[i][j].y = rot;
+							} else {
+								mapa[i-1][j-1].x = 3;
+								mapa[i-1][j-1].y = 0;
+								mapa[i-1][j].x = 7;
+								mapa[i-1][j].y = 0;
+								mapa[i][j-1].x = 11;
+								mapa[i][j-1].y = 0;
+								mapa[i][j].x = 15;
+								mapa[i][j].y = 0;
+							}
+					}	
 				}
 			}
 			//medidor de FPS
@@ -391,7 +427,7 @@ int main(int argc, char* args[]) {
 															 0};
 										marcos[nParticulas++] = newpart;
 									}
-									Mix_PlayChannel(-1,tiro_de_metralhadora,0);
+									Mix_PlayChannel(-1,disp_metralhadora,0);
 								}
 							}
 							break;
@@ -424,6 +460,7 @@ int main(int argc, char* args[]) {
 														 0};
 									marcos[nParticulas++] = newpart;
 								}
+								Mix_PlayChannel(-1,disp_canhao,0);
 							}
 							break;
 					}
@@ -555,7 +592,7 @@ int main(int argc, char* args[]) {
 															   0};
 										marcos[nParticulas++] = newpart;
 									}
-									Mix_PlayChannel(-1,tiro_de_metralhadora,0);
+									Mix_PlayChannel(-1,disp_metralhadora,0);
 									break;
 								}
 							}
@@ -1093,7 +1130,8 @@ int main(int argc, char* args[]) {
 	}
 	
 	//finaliza o mixer
-	Mix_FreeChunk(tiro_de_metralhadora);
+	Mix_FreeChunk(disp_metralhadora);
+	Mix_FreeChunk(disp_canhao);
 	Mix_CloseAudio();
 	Mix_Quit();
 	
@@ -1115,7 +1153,8 @@ int main(int argc, char* args[]) {
 	SDL_DestroyTexture(vidatanque);
 	SDL_DestroyTexture(fundovida);
 	SDL_DestroyTexture(morte);
-	SDL_DestroyTexture(tile_map);
+	SDL_DestroyTexture(terra);
+	SDL_DestroyTexture(neve);
 	SDL_DestroyTexture(nuvens);
 	SDL_DestroyTexture(chassiHD);
 	SDL_DestroyTexture(torreHD);

@@ -21,7 +21,8 @@ poligono hitbox_tanque = {4,
 						   
 //o FPS � GLOBAL!										  
 int FPS = 120, TPF = 8,
-	WIDTH,HEIGHT;
+	WIDTH,HEIGHT,
+	MWIDTH,MHEIGHT;
 
 //Tela de morte
 EstadoDoJogo estado_jogo = JOGO_VIVO;

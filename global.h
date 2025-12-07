@@ -6,9 +6,6 @@
 #include "estados.h"
 #include "estruturas.h"
 
-#define MWIDTH   WIDTH/2
-#define MHEIGHT HEIGHT/2
-
 extern SDL_FPoint velocidades[];
 
 
@@ -19,7 +16,8 @@ extern poligono hitbox_tanque,
 
 		 
 extern int FPS,TPF,
-		   WIDTH,HEIGHT;
+		   WIDTH,HEIGHT,
+		   MWIDTH,MHEIGHT;
 
 
 extern EstadoDoJogo estado_jogo;
