@@ -287,6 +287,8 @@ int main(int argc, char* args[]) {
 			Marcha marcha = PONTO_MORTO;
 			Movimento movimento = NULO;
 			int seed = rand(),
+				inicioDoJogo = SDL_GetTicks(),
+				tempoDeMorte,
 				gamerunning = 1,
 				debug = 0,
 				grid = 0,
@@ -307,7 +309,7 @@ int main(int argc, char* args[]) {
 			SDL_Event evt;
 			
 			int HEALTH_BAR_SIZE = 1000;
-            float vidaTanque = 1000;
+            float vidaTanque = 10;
 			
 			int chao = rand()%2;
 			SDL_Texture * tile_map;
@@ -470,6 +472,11 @@ int main(int argc, char* args[]) {
 				if (espera == 0) {
 					if (estado_jogo == JOGO_MORTO) {
 						desenhar_tela_de_morte(ren, morte, WIDTH, HEIGHT);
+						char * deathers[] = {"Pontuacao:   %5.0lf",
+										     "Tempo vivo: %5.0lfs"};
+						double deathData[] = {soldadosMortos,
+											  (tempoDeMorte-inicioDoJogo)/1000};
+						doubleDataLabel(ren,MWIDTH-17*4-6,HEIGHT*3/4,2,deathers,deathData,NULL);
 						SDL_RenderPresent(ren);
 						continue;
 					}
@@ -966,7 +973,8 @@ int main(int argc, char* args[]) {
 										   -local.y,
 										   angulo,
 										   0,
-										   velocidade/32.5*3.6,soldadosMortos};
+										   velocidade/32.5*3.6,
+										   soldadosMortos};
 					SDL_Color coresChassi[] = {branco,
 											   branco,
 											   branco,
@@ -1102,6 +1110,7 @@ int main(int argc, char* args[]) {
 						local.y = local.y+deslocamento.y;
 					
 					if (vidaTanque <= 0 && estado_jogo == JOGO_VIVO) {
+						tempoDeMorte = SDL_GetTicks();
 						estado_jogo = JOGO_MORTO;
 						fade_morte = 0.0f;
 						zoom_morte = 0.3f;
