@@ -309,7 +309,7 @@ int main(int argc, char* args[]) {
 			SDL_Event evt;
 			
 			int HEALTH_BAR_SIZE = 1000;
-            float vidaTanque = 10;
+            float vidaTanque = 1000;
 			
 			int chao = rand()%2;
 			SDL_Texture * tile_map;
