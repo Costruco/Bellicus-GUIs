@@ -1,39 +1,21 @@
-Game License (Adapted from GNU GPL v3)
-Copyright (c) 2025 Costruco
+Copyright (c) 2026 Costruco
 
-All rights to this project — including source code, artwork, sounds, music, text, and any other assets — are reserved by the authors.
+This software and all associated assets (including source code, artwork, music,
+sound effects, narrative, characters, and trademarks) are proprietary and
+protected by international copyright laws.
 
-You may view and study this code for educational or collaborative purposes only, provided that you:
-- Do not use it commercially;
-- Do not redistribute it without the authors’ explicit permission;
-- Do not modify it with the intent to publish, sell, or distribute derivative versions.
+"Bellicus" is a trademark of Costruco.
 
-This project is protected under international copyright law and the GNU General Public License v3, with the following modifications specific to digital games:
+This is NOT an open-source license.
 
-1. **Intellectual Property**
-   - All rights to the name, visual identity, characters, soundtrack, and any narrative elements belong exclusively to the original authors.
-   - No commercial usage rights are granted.
+1. Permission is granted to view and study the source code for educational purposes only.
+2. You may not redistribute, publish, sell, sublicense, or commercially exploit this project or any derivative works without explicit written permission from the copyright holder.
+3. Modification of the source code is permitted for personal use only. Public distribution of modified versions is prohibited without prior authorization.
+4. All trademarks, names, characters, story elements, and visual identity remain the exclusive property of the author.
+5. The software is provided "as is", without warranty of any kind. The author shall not be liable for any damages arising from its use.
+6. Contributions submitted to this project grant the author a perpetual, worldwide, royalty-free license to use, modify, and incorporate the contribution into the project.
 
-2. **Source Code**
-   - The source code may be examined and studied.
-   - Any redistribution or modification requires that:
-     - The derived code maintains this same license;
-     - The original project and its authors are clearly credited;
-     - Prior written authorization is obtained for any public distribution.
+This license shall be governed by the laws of Brazil.
 
-3. **Commercial Use**
-   - It is strictly prohibited to use, sell, license, or profit, directly or indirectly, from this project (or parts of it) without the authors’ permission.
-
-4. **Liability**
-   - The software is provided “as is,” without any warranty, express or implied.
-   - The authors shall not be held liable for any damages arising from the use of this software.
-
-5. **Contributions**
-   - By contributing code, art, music, or other content, the contributor agrees to license their contribution under the same terms as this license.
-
-For commercial use or redistribution requests, please contact:
-[Email or official website of the studio/team]
-
-Based on GNU General Public License v3 (https://www.gnu.org/licenses/gpl-3.0.html)
-Adapted for digital game projects.
-
+For commercial licensing inquiries:
+nintendo_64m@outlook.com
