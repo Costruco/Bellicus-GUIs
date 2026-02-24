@@ -13,9 +13,9 @@ survives against increasingly difficult enemy waves.
 
 Bellicus is an experimental indie game project focused on:
 
--   Top-down 2D gameplay with shooting and movement mechanics\
--   Wave-based enemy spawning\
--   Clean and modular C architecture\
+-   Top-down 2D gameplay with shooting and movement mechanics
+-   Wave-based enemy spawning
+-   Clean and modular C architecture
 -   Separation of concerns using game states and systems
 
 The main goal is to survive as long as possible while managing enemies,
@@ -25,14 +25,14 @@ positioning, and resources.
 
 ## 🚀 Features
 
--   ✔️ Top-down 2D tank gameplay\
--   ✔️ Modular state machine (menu, gameplay, pause)\
--   ✔️ Clean and scalable C codebase\
+-   ✔️ Top-down 2D tank gameplay
+-   ✔️ Modular state machine (menu, gameplay, pause)
+-   ✔️ Clean and scalable C codebase
 -   ✔️ Integrated sprites, sound effects, and music
--   ✔️ Tank gears\
--   ✔️ Linear spawn of enemies\
--   ✔️ Random generation of battlefield\
--   ✔️ Original start and end game screens\
+-   ✔️ Tank gears
+-   ✔️ Linear spawn of enemies
+-   ✔️ Random generation of battlefield
+-   ✔️ Original start and end game screens
 -   ✔️ Collisions with Ray Casting
 
 ------------------------------------------------------------------------
@@ -73,8 +73,8 @@ This architecture prioritizes **clarity, performance, and extensibility**, makin
 
 ## 📦 Requirements
 
--   GCC or compatible C compiler\
--   Make (optional but recommended)\
+-   GCC or compatible C compiler
+-   Make (optional but recommended)
 -   Standard C libraries
 -   SDL2 (graphics, input, audio)
 -   SDL2_image
@@ -100,8 +100,7 @@ Additional linker flags (such as `SDL2main` or platform-specific libraries)
 may be required depending on your environment.
 
 ```bash
-gcc *.c calc/*.c -o bellicus \
-    -lSDL2main -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_mixer
+gcc *.c calc/*.c -o bellicus -lSDL2main -lSDL2 -lSDL2_gfx -lSDL2_image -lSDL2_mixer
 ```
 
 
@@ -158,13 +157,13 @@ Contributions are welcome via issues and pull requests.
 ## 📌 Authors
 
 **Marcos Vitor Mendonça**\
-Computer Science Undergraduate -- UERJ\
+Computer Science - UERJ
 GitHub: https://github.com/m-m-legend
 
 **Eraldo Botelho**\
-Computer Science Undergraduate -- UERJ\
+Computer Science - UERJ
 GitHub: https://github.com/SlliperySwan
 
 **Bruno Domenico**\
-Computer Science Undergraduate -- UERJ\
+Computer Science - UERJ
 GitHub: https://github.com/Brunodpp
